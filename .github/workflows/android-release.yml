@@ -76,20 +76,26 @@ jobs:
         env:
           ETA_RELEASE_STORE_PASSWORD: ${{ secrets.ETA_RELEASE_STORE_PASSWORD }}
         run: |
-          debug_apk="app/build/outputs/apk/debug/app-debug.apk"
-          release_apk="app/build/outputs/apk/release/app-release.apk"
           output_dir="$RUNNER_TEMP/apks"
           apksigner_path="$(find "$ANDROID_HOME/build-tools" \
             -type f -name apksigner | sort -V | tail -n 1)"
 
-          if [[ ! -f "$debug_apk" ]]; then
+          echo "===== app/build/outputs/apk 实际内容 ====="
+          find app/build/outputs/apk -type f 2>/dev/null | sort || true
+          echo "============================================"
+
+          debug_apk="$(find app/build/outputs/apk/debug -type f -name '*.apk' | sort | head -n 1)"
+          if [[ -z "$debug_apk" || ! -f "$debug_apk" ]]; then
             echo "::error::未找到 Debug APK。"
             exit 1
           fi
-          if [[ ! -f "$release_apk" ]]; then
+          release_apk="$(find app/build/outputs/apk/release -type f -name '*.apk' | sort | head -n 1)"
+          if [[ -z "$release_apk" || ! -f "$release_apk" ]]; then
             echo "::error::未找到 Release APK。"
             exit 1
           fi
+          echo "debug_apk=$debug_apk"
+          echo "release_apk=$release_apk"
           if [[ -z "$apksigner_path" ]]; then
             echo "::error::未找到 apksigner。"
             exit 1
