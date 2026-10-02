@@ -11,6 +11,7 @@ internal object McpProtocolMode {
 internal object McpAuthorizationType {
     const val NONE = "none"
     const val BEARER = "bearer"
+    const val BASIC = "basic"
 }
 
 @Serializable

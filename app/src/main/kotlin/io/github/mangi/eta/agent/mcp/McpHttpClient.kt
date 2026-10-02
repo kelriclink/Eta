@@ -1,6 +1,7 @@
 package io.github.mangi.eta.agent.mcp
 
 import io.github.mangi.eta.agent.model.AgentHttpClient
+import io.github.mangi.eta.data.model.McpAuthorizationType
 import io.github.mangi.eta.data.model.McpProtocolMode
 import io.github.mangi.eta.data.model.McpServerSetting
 import io.github.mangi.eta.data.model.McpToolDefinition
@@ -402,7 +403,12 @@ internal class McpHttpClient(
 
     private fun Request.Builder.applyAuthorization(): Request.Builder = apply {
         bearerToken?.trim()?.takeIf { it.isNotBlank() }?.let { token ->
-            header("Authorization", "Bearer $token")
+            val scheme = if (server.authorizationType == McpAuthorizationType.BASIC) {
+                "Basic"
+            } else {
+                "Bearer"
+            }
+            header("Authorization", "$scheme $token")
         }
     }
 

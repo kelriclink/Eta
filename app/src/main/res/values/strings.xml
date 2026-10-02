@@ -1194,6 +1194,13 @@
   <string name="mcp_enable_tool">Enable</string>
   <string name="mcp_update_token_summary">Enter a new token, or leave it blank to remove authentication</string>
   <string name="mcp_bearer_token">Bearer token</string>
+  <string name="mcp_auth_type">Authentication type</string>
+  <string name="mcp_auth_none">None</string>
+  <string name="mcp_auth_bearer">Bearer</string>
+  <string name="mcp_auth_basic">Basic</string>
+  <string name="mcp_basic_optional">Basic token, base64 of user:password (optional)</string>
+  <string name="mcp_basic_token">Basic token</string>
+  <string name="mcp_token_configured_basic">Basic token configured</string>
   <string name="mcp_delete_confirm">Delete %1$s? This cannot be undone.</string>
   <string name="mcp_read_only_tool">Read-only tool</string>
   <string name="mcp_may_modify_data">May modify data or call an external service</string>

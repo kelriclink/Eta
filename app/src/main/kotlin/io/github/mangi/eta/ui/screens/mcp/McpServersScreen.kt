@@ -43,6 +43,7 @@ import io.github.mangi.eta.ui.components.EtaPreferenceGroupTitle
 import io.github.mangi.eta.ui.components.EtaSwitchPreference
 import io.github.mangi.eta.ui.components.EtaTextButton
 import io.github.mangi.eta.ui.components.EtaWindowDialog
+import io.github.mangi.eta.ui.components.EtaWindowSpinnerPreference
 import io.github.mangi.eta.ui.components.ListEmptyState
 import io.github.mangi.eta.ui.components.MiuixDialogActions
 import io.github.mangi.eta.ui.components.MiuixScaffoldPage
@@ -50,6 +51,7 @@ import io.github.mangi.eta.ui.navigation.AppRoute
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Text
@@ -69,6 +71,7 @@ internal fun McpServersScreen(
     var name by remember { mutableStateOf("") }
     var url by remember { mutableStateOf("") }
     var token by remember { mutableStateOf("") }
+    var authIndex by remember { mutableStateOf(1) }
     var working by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
 
@@ -144,10 +147,27 @@ internal fun McpServersScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
                 modifier = Modifier.fillMaxWidth(),
             )
+            EtaWindowSpinnerPreference(
+                title = stringResource(R.string.mcp_auth_type),
+                items = listOf(
+                    DropdownItem(text = stringResource(R.string.mcp_auth_none)),
+                    DropdownItem(text = stringResource(R.string.mcp_auth_bearer)),
+                    DropdownItem(text = stringResource(R.string.mcp_auth_basic)),
+                ),
+                selectedIndex = authIndex,
+                enabled = !working,
+                onSelectedIndexChange = { authIndex = it },
+            )
             TextField(
                 value = token,
                 onValueChange = { token = it },
-                label = stringResource(R.string.mcp_bearer_optional),
+                label = stringResource(
+                    if (authIndex == 2) {
+                        R.string.mcp_basic_optional
+                    } else {
+                        R.string.mcp_bearer_optional
+                    },
+                ),
                 singleLine = true,
                 enabled = !working,
                 visualTransformation = PasswordVisualTransformation(),
@@ -181,19 +201,20 @@ internal fun McpServersScreen(
                         working = true
                         val result = withContext(Dispatchers.IO) {
                             runCatching {
+                                val normalizedToken = if (authIndex == 0) "" else token
                                 val draft = McpServerSetting(
                                     id = "",
                                     name = normalizedName,
                                     url = normalizedUrl,
                                     protocolMode = McpProtocolMode.AUTO,
-                                    authorizationType = if (token.isBlank()) {
-                                        McpAuthorizationType.NONE
-                                    } else {
-                                        McpAuthorizationType.BEARER
+                                    authorizationType = when (authIndex) {
+                                        1 -> McpAuthorizationType.BEARER
+                                        2 -> McpAuthorizationType.BASIC
+                                        else -> McpAuthorizationType.NONE
                                     },
                                 )
-                                val discovered = McpServerManager.discover(draft, token)
-                                McpServerRepository.add(discovered, token)
+                                val discovered = McpServerManager.discover(draft, normalizedToken)
+                                McpServerRepository.add(discovered, normalizedToken)
                             }
                         }
                         working = false
@@ -202,6 +223,7 @@ internal fun McpServersScreen(
                             name = ""
                             url = ""
                             token = ""
+                            authIndex = 1
                             error = null
                             Toast.makeText(
                                 context,
@@ -233,6 +255,7 @@ internal fun McpServerDetailScreen(
     var showDelete by remember { mutableStateOf(false) }
     var showToken by remember { mutableStateOf(false) }
     var token by remember { mutableStateOf("") }
+    var tokenAuthIndex by remember { mutableStateOf(0) }
 
     MiuixScaffoldPage(
         title = server?.name ?: stringResource(R.string.route_mcp_server_detail),
@@ -289,13 +312,16 @@ internal fun McpServerDetailScreen(
                 EtaArrowPreference(
                     title = stringResource(R.string.mcp_update_token),
                     summary = stringResource(
-                        if (server.authorizationType == McpAuthorizationType.BEARER) {
-                            R.string.mcp_token_configured
-                        } else {
-                            R.string.mcp_no_authentication
+                        when (server.authorizationType) {
+                            McpAuthorizationType.BEARER -> R.string.mcp_token_configured
+                            McpAuthorizationType.BASIC -> R.string.mcp_token_configured_basic
+                            else -> R.string.mcp_no_authentication
                         }
                     ),
-                    onClick = { showToken = true },
+                    onClick = {
+                        tokenAuthIndex = authIndexFor(server.authorizationType)
+                        showToken = true
+                    },
                 )
             }
         }
@@ -367,10 +393,26 @@ internal fun McpServerDetailScreen(
         onDismissRequest = { showToken = false },
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            EtaWindowSpinnerPreference(
+                title = stringResource(R.string.mcp_auth_type),
+                items = listOf(
+                    DropdownItem(text = stringResource(R.string.mcp_auth_none)),
+                    DropdownItem(text = stringResource(R.string.mcp_auth_bearer)),
+                    DropdownItem(text = stringResource(R.string.mcp_auth_basic)),
+                ),
+                selectedIndex = tokenAuthIndex,
+                onSelectedIndexChange = { tokenAuthIndex = it },
+            )
             TextField(
                 value = token,
                 onValueChange = { token = it },
-                label = stringResource(R.string.mcp_bearer_token),
+                label = stringResource(
+                    if (tokenAuthIndex == 2) {
+                        R.string.mcp_basic_token
+                    } else {
+                        R.string.mcp_bearer_token
+                    },
+                ),
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -384,13 +426,13 @@ internal fun McpServerDetailScreen(
                         scope.launch(Dispatchers.IO) {
                             McpServerRepository.update(
                                 current.copy(
-                                    authorizationType = if (token.isBlank()) {
-                                        McpAuthorizationType.NONE
-                                    } else {
-                                        McpAuthorizationType.BEARER
+                                    authorizationType = when (tokenAuthIndex) {
+                                        1 -> McpAuthorizationType.BEARER
+                                        2 -> McpAuthorizationType.BASIC
+                                        else -> McpAuthorizationType.NONE
                                     },
                                 ),
-                                bearerToken = token,
+                                bearerToken = if (tokenAuthIndex == 0) "" else token,
                             )
                         }
                         token = ""
@@ -425,4 +467,10 @@ internal fun McpServerDetailScreen(
 private fun toolSummary(tool: McpToolDefinition): String = when {
     tool.readOnlyHint == true -> tool.description.ifBlank { stringResource(R.string.mcp_read_only_tool) }
     else -> tool.description.ifBlank { stringResource(R.string.mcp_may_modify_data) }
+}
+
+private fun authIndexFor(authorizationType: String?): Int = when (authorizationType) {
+    McpAuthorizationType.BEARER -> 1
+    McpAuthorizationType.BASIC -> 2
+    else -> 0
 }

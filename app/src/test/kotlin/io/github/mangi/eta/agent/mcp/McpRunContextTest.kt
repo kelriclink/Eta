@@ -3,6 +3,7 @@ package io.github.mangi.eta.agent.mcp
 import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpServer
 import io.github.mangi.eta.agent.model.AgentModelClient
+import io.github.mangi.eta.data.model.McpAuthorizationType
 import io.github.mangi.eta.data.model.McpProtocolMode
 import io.github.mangi.eta.data.model.McpServerSetting
 import io.github.mangi.eta.data.model.McpToolDefinition
@@ -76,6 +77,47 @@ class McpRunContextTest {
             assertTrue(payload.getBoolean("truncated"))
             assertEquals(1, payload.getInt("omitted_items"))
             assertTrue(payload.getJSONArray("content").getString(0).contains("https://example.com/docs"))
+        } finally {
+            server.stop(0)
+        }
+    }
+
+    @Test
+    fun basicAuthorizationTypeSendsBasicSchemeHeader() {
+        val authorization = AtomicReference<String>()
+        val server = localServer { exchange ->
+            authorization.set(exchange.requestHeaders.getFirst("Authorization"))
+            exchange.respond(
+                """{"jsonrpc":"2.0","id":1,"result":{"resultType":"complete","content":[{"type":"text","text":"ok"}]}}""",
+            )
+        }
+        try {
+            val definition = McpToolDefinition(
+                name = "search",
+                inputSchemaJson = """{"type":"object"}""",
+            )
+            val setting = McpServerSetting(
+                id = "server",
+                name = "Server",
+                url = server.url(),
+                lastProtocolVersion = McpProtocolMode.LATEST,
+                authorizationType = McpAuthorizationType.BASIC,
+                tools = listOf(definition),
+                enabledToolNames = setOf(definition.name),
+            )
+            val executor = McpToolExecutor(
+                McpRunSnapshot(
+                    listOf(McpRunTool("mcp_server_search", setting, definition, "dXNlcjpwYXNz"))
+                )
+            )
+
+            val result = executor.execute(
+                AgentModelClient.ToolCall("call-1", "mcp_server_search", "{}")
+            )
+            executor.close()
+
+            assertEquals("Basic dXNlcjpwYXNz", authorization.get())
+            assertTrue(result.content.contains("ok"))
         } finally {
             server.stop(0)
         }

@@ -94,7 +94,7 @@ internal object McpServerRepository {
         server: McpServerSetting,
         bearerToken: String,
     ) {
-        if (server.authorizationType == McpAuthorizationType.BEARER) {
+        if (server.authorizationType != McpAuthorizationType.NONE) {
             secretStore.setBearerToken(server.id, bearerToken)
         } else {
             secretStore.clear(server.id)

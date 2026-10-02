@@ -1175,6 +1175,13 @@
   <string name="mcp_enable_tool">启用</string>
   <string name="mcp_update_token_summary">输入新 Token，留空则移除身份认证</string>
   <string name="mcp_bearer_token">Bearer Token</string>
+  <string name="mcp_auth_type">认证方式</string>
+  <string name="mcp_auth_none">无</string>
+  <string name="mcp_auth_bearer">Bearer</string>
+  <string name="mcp_auth_basic">Basic</string>
+  <string name="mcp_basic_optional">Basic Token（user:password 的 base64，可选）</string>
+  <string name="mcp_basic_token">Basic Token</string>
+  <string name="mcp_token_configured_basic">已配置 Basic Token</string>
   <string name="mcp_delete_confirm">删除 %1$s？此操作无法撤销。</string>
   <string name="mcp_read_only_tool">只读工具</string>
   <string name="mcp_may_modify_data">可能修改数据或访问外部服务</string>
