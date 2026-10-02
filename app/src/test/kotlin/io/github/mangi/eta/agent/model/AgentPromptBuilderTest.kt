@@ -1,6 +1,8 @@
 package io.github.mangi.eta.agent.model
 
 import io.github.mangi.eta.agent.memory.AgentMemoryContext
+import io.github.mangi.eta.agent.roleplay.CharacterCardCodec
+import io.github.mangi.eta.agent.roleplay.RoleplayRunContext
 import io.github.mangi.eta.agent.skill.SkillContext
 import io.github.mangi.eta.agent.skill.SkillIndexEntry
 import org.json.JSONArray
@@ -187,6 +189,42 @@ class AgentPromptBuilderTest {
         assertTrue(memory.contains("revision=${"b".repeat(64)}"))
         assertTrue(memory.contains("用户以前偏好中文"))
         assertEquals("现在改用英文回答", messages.getJSONObject(messages.length() - 1).getString("content"))
+    }
+
+    @Test
+    fun personaPromptIsInjectedForNormalRunsAndSkippedForRoleplayRuns() {
+        val config = modelConfig("", terminalTools = false, browserTools = false)
+        val normal = AgentPromptBuilder.buildSystemMessages(
+            config = config,
+            skillContext = SkillContext.EMPTY,
+            memoryContext = AgentMemoryContext.DISABLED,
+            rootAvailable = false,
+            personaPrompt = "你是猫小呆。",
+        )
+        val blank = AgentPromptBuilder.buildSystemMessages(
+            config = config,
+            skillContext = SkillContext.EMPTY,
+            memoryContext = AgentMemoryContext.DISABLED,
+            rootAvailable = false,
+            personaPrompt = "  ",
+        )
+        assertEquals(blank.length() + 1, normal.length())
+        assertEquals("你是猫小呆。", normal.getJSONObject(1).getString("content"))
+        assertFalse(blank.systemContents().any { it == "你是猫小呆。" })
+
+        val roleplay = RoleplayRunContext(
+            "fixture", CharacterCardCodec.create("林舟"), "旅伴", "", contextWindow = 128_000,
+        )
+        val character = AgentPromptBuilder.buildSystemMessages(
+            config = config,
+            skillContext = SkillContext.EMPTY,
+            memoryContext = AgentMemoryContext.DISABLED,
+            rootAvailable = false,
+            roleplayContext = roleplay,
+            personaPrompt = "你是猫小呆。",
+        )
+        assertFalse(character.systemContents().any { it == "你是猫小呆。" })
+        assertTrue(character.systemContents().any { it.contains("林舟") })
     }
 
     private fun modelConfig(

@@ -17,8 +17,16 @@ internal object AgentPromptBuilder {
         memoryContext: AgentMemoryContext = AgentMemoryContext.DISABLED,
         rootAvailable: Boolean = false,
         roleplayContext: RoleplayRunContext? = null,
+        personaPrompt: String = "",
     ): JSONArray {
-        val messages = buildSystemMessages(config, skillContext, memoryContext, rootAvailable, roleplayContext)
+        val messages = buildSystemMessages(
+            config,
+            skillContext,
+            memoryContext,
+            rootAvailable,
+            roleplayContext,
+            personaPrompt,
+        )
         history.forEach { item ->
             runCatching { AgentConversationCodec.toJsonObject(item) }.getOrNull()?.let(messages::put)
         }
@@ -32,6 +40,7 @@ internal object AgentPromptBuilder {
         memoryContext: AgentMemoryContext,
         rootAvailable: Boolean,
         roleplayContext: RoleplayRunContext? = null,
+        personaPrompt: String = "",
     ): JSONArray {
         val messages = JSONArray()
         if (roleplayContext == null && config.systemPrompt.isNotBlank()) {
@@ -140,6 +149,9 @@ internal object AgentPromptBuilder {
                         "只有需要把 URI 交给外部应用时才使用 open_uri；open_uri 不用于读取网页。"
                 )
             )
+        }
+        if (roleplayContext == null && personaPrompt.isNotBlank()) {
+            messages.put(systemMessage(personaPrompt))
         }
         roleplayContext?.personaMessage()?.let(messages::put)
         buildMemorySystemMessage(memoryContext, writable = roleplayContext == null)?.let(messages::put)

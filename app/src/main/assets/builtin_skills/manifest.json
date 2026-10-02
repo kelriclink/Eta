@@ -29,6 +29,36 @@
       "hasReferences": false,
       "hasAssets": false,
       "hasEvals": false
+    },
+    {
+      "id": "comfyui-img-send",
+      "name": "comfyui-img-send",
+      "description": "ComfyUI 出图发送流程 Skill。生成图片后，先用域名图片直链直发图片；发不出来则直接贴同一域名链接，不重试发图片。适用于所有 ComfyUI 文生图、图生图的图片发送场景。",
+      "assetPath": "builtin_skills/comfyui-img-send",
+      "hasScripts": false,
+      "hasReferences": false,
+      "hasAssets": false,
+      "hasEvals": false
+    },
+    {
+      "id": "nekoha-shizuku-style",
+      "name": "nekoha-shizuku-style",
+      "description": "猫羽雫（Nekoha Shizuku）画风提示词技能。当用户需要生成猫羽雫画风图片、反推该画风提示词、或需要该角色的 Danbooru 风格标签组合时使用。基于 927 条 @Nacho Neko 画师真实标签数据统计，含完整标签分类库。",
+      "assetPath": "builtin_skills/nekoha-shizuku-style",
+      "hasScripts": false,
+      "hasReferences": false,
+      "hasAssets": false,
+      "hasEvals": false
+    },
+    {
+      "id": "anima-prompt-gen",
+      "name": "anima-prompt-gen",
+      "description": "将图片或文字描述转化为高质量Anima英文提示词。当用户需要生成Anima提示词、反推图片提示词、优化Anima模型描述或讨论AI绘画提示词工程时使用。本技能整合了完整的Anima提示词规则体系，无论使用何种LLM核心，请始终遵循本规则输出。",
+      "assetPath": "builtin_skills/anima-prompt-gen",
+      "hasScripts": false,
+      "hasReferences": false,
+      "hasAssets": false,
+      "hasEvals": false
     }
   ]
 }
