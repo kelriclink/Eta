@@ -44,6 +44,7 @@ jobs:
         run: sdkmanager --channel=3 "platforms;android-37.0"
 
       - name: 还原发布证书
+        if: ${{ secrets.ETA_RELEASE_KEYSTORE_BASE64 && secrets.ETA_RELEASE_STORE_PASSWORD && secrets.ETA_RELEASE_KEY_ALIAS && secrets.ETA_RELEASE_KEY_PASSWORD }}
         env:
           ETA_RELEASE_KEYSTORE_BASE64: ${{ secrets.ETA_RELEASE_KEYSTORE_BASE64 }}
           ETA_RELEASE_STORE_PASSWORD: ${{ secrets.ETA_RELEASE_STORE_PASSWORD }}
@@ -73,6 +74,8 @@ jobs:
 
       - name: 验证并整理 APK
         id: apk
+        env:
+          ETA_RELEASE_STORE_PASSWORD: ${{ secrets.ETA_RELEASE_STORE_PASSWORD }}
         run: |
           debug_apk="app/build/outputs/apk/debug/app-debug.apk"
           release_apk="app/build/outputs/apk/release/app-release.apk"
@@ -93,7 +96,11 @@ jobs:
             exit 1
           fi
 
-          "$apksigner_path" verify "$release_apk"
+          if [[ -n "$ETA_RELEASE_STORE_PASSWORD" ]]; then
+            "$apksigner_path" verify "$release_apk"
+          else
+            echo "无 Release 签名 Secrets，跳过 apksigner 校验（Release 未签名）。"
+          fi
           mkdir -p "$output_dir"
           cp "$debug_apk" "$output_dir/app-debug.apk"
           cp "$release_apk" "$output_dir/app-release.apk"
