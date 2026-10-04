@@ -59,6 +59,16 @@
       "hasReferences": false,
       "hasAssets": false,
       "hasEvals": false
-    }
+    },
+    {
+    "id": "anima-prompt",
+    "name": "anima-prompt",
+    "description": "Anima 提示词生成",
+    "assetPath": "builtin_skills/anima-prompt",
+    "hasScripts": false,
+    "hasReferences": true,
+    "hasAssets": false,
+    "hasEvals": false
+  }
   ]
 }
