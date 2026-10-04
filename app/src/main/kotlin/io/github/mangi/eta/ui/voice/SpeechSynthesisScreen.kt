@@ -106,7 +106,7 @@ private fun SpeechPreviewSection(store: SpeechSettingsStore) {
                     } else {
                         store.playback.speak(
                             "preview",
-                            "你好，我是 Eta。有什么可以帮你？",
+                            "你好，我是小月。有什么可以帮你？",
                             store.settings,
                             store.credentials,
                         )

@@ -301,7 +301,7 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
                                 is AgentRuntimeImageTransfer.ImageTransferException ->
                                     throwable.message ?: "Agent Runtime 无法读取图片"
                                 is RuntimeConfigUnavailableException ->
-                                    "请先在 Eta 中配置可用的模型"
+                                    "请先在小月中配置可用的模型"
                                 else -> "Agent Runtime 无法准备请求"
                             },
                             replyTo,
@@ -331,7 +331,7 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
         if (!executionHeld && !allowBoundFallback) {
             session.complete(AgentRuntimeWire.RunResult(
                 runId = request.runId, ok = false, content = "",
-                error = "无法启动后台执行服务，请返回 Eta 后重试",
+                error = "无法启动后台执行服务，请返回小月后重试",
             )) {}
             return
         }
@@ -1120,7 +1120,7 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
     }
 
     private companion object {
-        const val ACTION_KEEP_ALIVE = "io.github.mangi.eta.agent.runtime.KEEP_ALIVE"
+        const val ACTION_KEEP_ALIVE = "org.tangxi.xiaoyue.agent.runtime.KEEP_ALIVE"
         const val HIDE_DELAY_MS = 2_500L
         const val RESULT_REVIEW_DELAY_MS = 120_000L
         const val RESULT_CARD_HEIGHT_RATIO = 0.5f
