@@ -62,7 +62,7 @@ internal object Prefs {
             AGENT_DEVICE_DIRECT_TOOLS to true,
             AGENT_DEVICE_SENSITIVE_READ_TOOLS to true,
             AGENT_DEVICE_SENSITIVE_ACTION_TOOLS to true,
-            AGENT_THINKING_ENABLED to true,
+            AGENT_THINKING_ENABLED to false,
             AGENT_AUTO_COMPACTION_ENABLED to true,
         )
 
