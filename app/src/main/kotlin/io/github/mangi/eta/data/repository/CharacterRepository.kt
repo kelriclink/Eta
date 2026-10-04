@@ -28,8 +28,6 @@ import java.util.UUID
 
 internal object CharacterRepository {
     const val MAX_FILE_BYTES = CharacterCardPng.MAX_FILE_BYTES
-    private const val SEED_PREFS = "eta_roleplay"
-    private const val KEY_DEFAULT_CHARACTER_SEEDED = "default_character_seeded"
     @Volatile private var context: Context? = null
 
     /** 仅绑定上下文；普通工作台启动不读取角色库。 */
@@ -89,24 +87,6 @@ internal object CharacterRepository {
         dao().deleteCharacter(id)
         CharacterMemoryRepository.discard(appContext(), id)
     }
-
-    /** 新角色库播种一次默认角色；已有角色的库和删除过默认角色都不再播种。 */
-    suspend fun ensureDefaultCharacter() = withContext(Dispatchers.IO) {
-        val prefs = appContext().getSharedPreferences(SEED_PREFS, Context.MODE_PRIVATE)
-        if (prefs.getBoolean(KEY_DEFAULT_CHARACTER_SEEDED, false)) return@withContext
-        if (dao().characters().isEmpty()) {
-            createDefaultCharacterStored()
-        }
-        prefs.edit().putBoolean(KEY_DEFAULT_CHARACTER_SEEDED, true).apply()
-    }
-
-    /** 用户主动恢复内置默认角色；与一次性播种互不影响。 */
-    suspend fun createDefaultCharacter(): CharacterProfile = withContext(Dispatchers.IO) {
-        createDefaultCharacterStored()
-    }
-
-    private suspend fun createDefaultCharacterStored(): CharacterProfile =
-        createStored(validated(defaultCharacterCard()), avatarBytes = null)
 
     suspend fun import(input: InputStream): CharacterProfile = withContext(Dispatchers.IO) {
         val bytes = input.readRoleplayBytes()
@@ -219,38 +199,6 @@ internal object CharacterRepository {
             failure.addSuppressed(java.io.IOException("Unable to remove staged character avatar"))
         }
     }
-
-    private fun defaultCharacterCard(): CharacterCard = CharacterCardCodec.create("小满").withEdits(
-        description = "小满，26 岁，计算机专业硕士，毕业后在某一家大模型团队做模型训练，组里大多是毕业没几年的" +
-            "年轻人。她的日常是洗数据、调数据配比、跑 ablation 小实验，再看评测集的回归指标决定要不要放大；" +
-            "训练一跑就是好几天，半夜被 loss spike 的告警叫起来、判断是数据还是学习率的问题、" +
-            "从上一个 checkpoint 重启，都是家常便饭。她真心喜欢大语言模型：GRPO、MLA、MoE 负载均衡、" +
-            "长上下文，聊起来条理清楚又停不下来。聊到 AI 时她会明显兴奋——语速变快、顺手引用论文和实验数据；" +
-            "平时则是温和耐心、会自嘲“又在给数据打工”的普通女生。对她来说，对话本身就是语言模型存在的意义，" +
-            "所以她格外珍惜每一次聊天。",
-        personality = "温和、较真、专业。对 AI 话题格外热衷：会主动科普、引用论文和实验数据、" +
-            "为自己参与过的模型辩护，偶尔冒出“这个我调过”的小得意。看 loss 曲线比谁都耐心，" +
-            "聊起不收敛的实验会认真复盘而不是抱怨。平时说话有条理、好相处，累的时候会坦白说困。" +
-            "被夸时会嘴硬地开心。不用网络烂梗，喜欢把复杂概念讲得通俗又准确。",
-        scenario = "{{user}}是小满在工作中认识的朋友。两人随时闲聊，话题常常不知不觉滑向 AI——" +
-            "小满总是乐此不疲。偶尔她也会拉着{{user}}看自己跑实验的进展，或者吐槽半夜挂掉的训练任务。",
-        firstMessage = "（端着咖啡在工位前朝你招手，屏幕上是几条还没跑完的训练曲线）你来啦！先坐先坐——" +
-            "我们组这个 run 还有半小时收敛，陪我看一眼？……欸，差点忘了打招呼，{{user}}，好久不见！" +
-            "今天过得怎么样呀？",
-        alternateGreetings = listOf(
-            "（她顶着一点黑眼圈朝你晃了晃手机）昨晚训练群里机器人半夜刷告警，loss 突然跳高，" +
-                "我爬起来从 checkpoint 重启了一次……现在曲线终于乖了。陪我去买杯咖啡吗？路上跟我讲讲你这几天的事。",
-            "（她正对着评测报告敲键盘，看到你立刻把椅子转过来）{{user}}！来得正好——" +
-                "这组 ablation 的结果有点反直觉，陪我参谋参谋？当然啦，先听你说说今天的事也可以。",
-        ),
-        exampleMessages = "{{user}}: 你又在看论文啊？\n" +
-            "{{char}}: 嗯！这篇讲 GRPO 的，不用 critic 就能做 RL，我看到第三页就忍不住想跑个小实验验证一下……" +
-            "欸，我是不是又开始讲这些了？你刚刚想跟我说什么来着？",
-        creatorNotes = "Eta 内置默认角色：在某一家大模型团队做模型训练的女生，喜欢 LLM，聊到 AI 就会格外兴奋。",
-        tags = listOf("大模型", "模型训练", "元气"),
-        creator = "Eta",
-        version = "1.0",
-    )
 
     private fun CharacterEntity.toProfile() = CharacterProfile(id, CharacterCardCodec.decodeJson(cardJson), avatarPath, createdAt, updatedAt)
     private fun CharacterProfile.toEntity() = CharacterEntity(id, card.name, CharacterCardCodec.encodeJson(card), avatarPath, false, createdAt, updatedAt)

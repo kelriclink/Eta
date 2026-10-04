@@ -24,7 +24,6 @@ class CharacterRepositoryTest {
     fun setUp() {
         EtaDatabase.closeForTests()
         context.deleteDatabase("eta.db")
-        context.getSharedPreferences("eta_roleplay", 0).edit().clear().commit()
         CharacterRepository.initialize(context)
     }
 
@@ -57,17 +56,14 @@ class CharacterRepositoryTest {
     }
 
     @Test
-    fun defaultCharacterSeedsOnlyIntoEmptyLibraryAndNeverResurrects() = runBlocking {
-        CharacterRepository.ensureDefaultCharacter()
-        assertEquals(listOf("小满"), CharacterRepository.list().map { it.card.name })
-        CharacterRepository.ensureDefaultCharacter()
-        assertEquals(1, CharacterRepository.list().size)
-        CharacterRepository.delete(CharacterRepository.list().single().id)
-        CharacterRepository.ensureDefaultCharacter()
-        assertEquals(emptyList<String>(), CharacterRepository.list().map { it.id })
-        // 用户主动恢复时不受播种标记限制。
-        CharacterRepository.createDefaultCharacter()
-        assertEquals(listOf("小满"), CharacterRepository.list().map { it.card.name })
+    fun libraryStartsEmptyAndStaysEmptyAfterDeletingLastCharacter() = runBlocking {
+        assertTrue(CharacterRepository.list().isEmpty())
+        CharacterRepository.initialize(context)
+        assertTrue(CharacterRepository.list().isEmpty())
+        val profile = CharacterRepository.create(CharacterCardCodec.create("自建角色"))
+        CharacterRepository.delete(profile.id)
+        CharacterRepository.initialize(context)
+        assertTrue(CharacterRepository.list().isEmpty())
     }
 
     @Test

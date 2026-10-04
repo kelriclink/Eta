@@ -80,7 +80,6 @@ internal class CharacterLibraryStore(
         }
 
     fun loadLibrary() = runOperation("角色库读取失败，请重试", queueIfBusy = true) {
-        io { CharacterRepository.ensureDefaultCharacter() }
         characters = io { CharacterRepository.list() }
     }
 
@@ -167,11 +166,6 @@ internal class CharacterLibraryStore(
         val profile = io { CharacterRepository.duplicate(id) }
         characters = io { CharacterRepository.list() }
         onDuplicated(profile.id)
-    }
-
-    fun restoreDefaultCharacter() = runOperation("默认角色恢复失败，请重试") {
-        io { CharacterRepository.createDefaultCharacter() }
-        characters = io { CharacterRepository.list() }
     }
 
     fun delete(id: String, onDeleted: () -> Unit) = runOperation("角色删除失败，请重试") {

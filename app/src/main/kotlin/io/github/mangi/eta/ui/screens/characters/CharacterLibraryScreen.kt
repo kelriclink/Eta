@@ -107,11 +107,6 @@ internal fun CharacterLibraryScreen(
                         action = {
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 EtaTextButton(
-                                    text = "恢复默认角色",
-                                    onClick = { store.restoreDefaultCharacter() },
-                                    enabled = !store.busy,
-                                )
-                                EtaTextButton(
                                     text = "创建角色",
                                     onClick = createCharacter,
                                     colors = ButtonDefaults.textButtonColorsPrimary(),
