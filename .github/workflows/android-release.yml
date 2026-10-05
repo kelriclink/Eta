@@ -1,4 +1,4 @@
-name: Eta Build
+name: Xiaoyue Release Build
 
 on:
   push:
@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   build-apks:
-    name: 构建 Debug 与 Release APK
+    name: 构建 Release APK
     runs-on: ubuntu-latest
     timeout-minutes: 40
 
@@ -33,6 +33,27 @@ jobs:
         uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6
         with:
           cache-provider: basic
+          cache-read-only: false
+
+      - name: 按 Runner 内存配置编译资源
+        shell: bash
+        run: |
+          memory_mib=$(python3 -c 'import os; print(os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES") // 1048576)')
+          cpus=$(nproc)
+          if (( memory_mib >= 14000 )); then
+            kotlin_heap=6144
+            gradle_heap=3072
+            workers=3
+          else
+            kotlin_heap=4096
+            gradle_heap=2048
+            workers=2
+          fi
+          if (( workers > cpus )); then workers=$cpus; fi
+          echo "Runner: ${memory_mib} MiB RAM, ${cpus} CPUs; Kotlin ${kotlin_heap} MiB, Gradle ${gradle_heap} MiB, ${workers} workers"
+          echo "CI_KOTLIN_HEAP=$kotlin_heap" >> "$GITHUB_ENV"
+          echo "CI_GRADLE_HEAP=$gradle_heap" >> "$GITHUB_ENV"
+          echo "CI_GRADLE_WORKERS=$workers" >> "$GITHUB_ENV"
 
       - name: 配置 Android SDK 工具
         uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4
@@ -54,22 +75,25 @@ jobs:
                 -z "$ETA_RELEASE_STORE_PASSWORD" ||
                 -z "$ETA_RELEASE_KEY_ALIAS" ||
                 -z "$ETA_RELEASE_KEY_PASSWORD" ]]; then
-            echo "缺少 Release 签名 Secrets，跳过（Release 未签名，Debug 不受影响）。"
+            echo "缺少 Release 签名 Secrets，跳过证书还原（Release 将未签名）。"
             exit 0
           fi
           printf '%s' "$ETA_RELEASE_KEYSTORE_BASE64" \
             | base64 --decode \
             > "$RUNNER_TEMP/eta-release.jks"
 
-      - name: 构建 Debug 与 Release APK
+      - name: 构建 Release APK
         env:
           ETA_RELEASE_STORE_FILE: ${{ runner.temp }}/eta-release.jks
           ETA_RELEASE_STORE_PASSWORD: ${{ secrets.ETA_RELEASE_STORE_PASSWORD }}
           ETA_RELEASE_KEY_ALIAS: ${{ secrets.ETA_RELEASE_KEY_ALIAS }}
           ETA_RELEASE_KEY_PASSWORD: ${{ secrets.ETA_RELEASE_KEY_PASSWORD }}
-        run: >-
-          ./gradlew --no-daemon --no-configuration-cache
-          :app:assembleDebug :app:assembleRelease
+        run: |
+          ./gradlew --daemon --build-cache --no-configuration-cache \
+            --max-workers="$CI_GRADLE_WORKERS" \
+            "-Dorg.gradle.jvmargs=-Xmx${CI_GRADLE_HEAP}m -XX:+UseG1GC -Dfile.encoding=UTF-8" \
+            "-Pkotlin.daemon.jvmargs=-Xmx${CI_KOTLIN_HEAP}m -XX:+UseG1GC" \
+            :app:assembleRelease
 
       - name: 验证并整理 APK
         id: apk
@@ -84,17 +108,11 @@ jobs:
           find app/build/outputs/apk -type f 2>/dev/null | sort || true
           echo "============================================"
 
-          debug_apk="$(find app/build/outputs/apk/debug -type f -name '*.apk' | sort | head -n 1)"
-          if [[ -z "$debug_apk" || ! -f "$debug_apk" ]]; then
-            echo "::error::未找到 Debug APK。"
-            exit 1
-          fi
           release_apk="$(find app/build/outputs/apk/release -type f -name '*.apk' | sort | head -n 1)"
           if [[ -z "$release_apk" || ! -f "$release_apk" ]]; then
             echo "::error::未找到 Release APK。"
             exit 1
           fi
-          echo "debug_apk=$debug_apk"
           echo "release_apk=$release_apk"
           if [[ -z "$apksigner_path" ]]; then
             echo "::error::未找到 apksigner。"
@@ -107,18 +125,8 @@ jobs:
             echo "无 Release 签名 Secrets，跳过 apksigner 校验（Release 未签名）。"
           fi
           mkdir -p "$output_dir"
-          cp "$debug_apk" "$output_dir/app-debug.apk"
           cp "$release_apk" "$output_dir/app-release.apk"
-          echo "debug_path=$output_dir/app-debug.apk" >> "$GITHUB_OUTPUT"
           echo "release_path=$output_dir/app-release.apk" >> "$GITHUB_OUTPUT"
-
-      - name: 上传 Debug APK
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          path: ${{ steps.apk.outputs.debug_path }}
-          archive: false
-          if-no-files-found: error
-          retention-days: 14
 
       - name: 上传 Release APK
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
