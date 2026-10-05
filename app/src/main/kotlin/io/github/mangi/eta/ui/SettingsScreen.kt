@@ -4,14 +4,12 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
-import android.net.Uri
 import android.provider.Settings
 import android.widget.Toast
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.MenuBook
 import androidx.compose.material.icons.rounded.AccessibilityNew
 import androidx.compose.material.icons.rounded.AccountTree
-import androidx.compose.material.icons.rounded.BugReport
 import androidx.compose.material.icons.rounded.Cloud
 import androidx.compose.material.icons.rounded.Dashboard
 import androidx.compose.material.icons.rounded.Description
@@ -142,9 +140,6 @@ private fun SettingsPageContent(
         context.packageManager.getPackageInfo(context.packageName, 0)
     }
     val appVersionSummary = "${appPackageInfo.versionName} (${appPackageInfo.longVersionCode})"
-    val openUrl: (String) -> Unit = { url ->
-        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-    }
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -744,18 +739,6 @@ private fun SettingsPageContent(
                                 tint = EtaPreferenceColors.Blue,
                             )
                         },
-                    )
-
-                    EtaPreferenceDivider()
-                    EtaArrowPreference(
-                        title = stringResource(R.string.ui_about_feedback_title),
-                        startAction = {
-                            EtaPreferenceIcon(
-                                icon = Icons.Rounded.BugReport,
-                                tint = EtaPreferenceColors.Orange,
-                            )
-                        },
-                        onClick = { openUrl("https://github.com/Mangi-11/Eta/issues") },
                     )
 
                 }
