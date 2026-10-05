@@ -81,9 +81,14 @@ data class ModelReasoningCapabilities(
     val supportsBudget: Boolean = false,
     val maxBudgetTokens: Int? = null,
     val supportsMaxTokens: Boolean? = null,
+    val offOnly: Boolean = false,
 ) {
     val selectableEfforts: List<ReasoningEffort>
         get() = buildList {
+            if (offOnly) {
+                add(ReasoningEffort.OFF)
+                return@buildList
+            }
             if (canDisable && !mandatory) add(ReasoningEffort.OFF)
             add(ReasoningEffort.DEFAULT)
             supportedEfforts
@@ -95,6 +100,8 @@ data class ModelReasoningCapabilities(
         }
 
     fun normalize(requested: ReasoningEffort): ReasoningEffort {
+        // 仅限制新选择，不覆盖旧会话已经保存的强度。
+        if (offOnly) return requested
         val selectable = selectableEfforts
         if (requested in selectable) return requested
         if (requested == ReasoningEffort.OFF || requested == ReasoningEffort.DEFAULT) {

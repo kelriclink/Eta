@@ -201,9 +201,16 @@ internal object ProviderRepository {
 
     private fun seedOfficialModelsIfEmpty(provider: ProviderSetting): ProviderSetting {
         if (provider.models.isNotEmpty()) return provider
-        val seededModels = OfficialModelCatalog.modelsForProvider(provider).map { model ->
+        val seededModels = OfficialModelCatalog.modelsForProvider(provider)
+            .let { models ->
+                if (provider.id == BuiltinProviders.DEEPSEEK_ID) {
+                    models.sortedBy { if (it.modelId == "deepseek-flash") 0 else 1 }
+                } else {
+                    models
+                }
+            }.mapIndexed { index, model ->
             if (provider.id == BuiltinProviders.DEEPSEEK_ID) {
-                model.copy(contextWindowOverride = 1_048_576)
+                model.copy(contextWindowOverride = 1_048_576, sortOrder = index)
             } else {
                 model
             }

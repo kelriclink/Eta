@@ -5,11 +5,24 @@ import io.github.mangi.eta.data.model.OpenAiCompatibleProviderSetting
 import io.github.mangi.eta.data.model.OpenAiEndpointMode
 import io.github.mangi.eta.data.provider.BuiltinProviders
 import io.github.mangi.eta.data.provider.OfficialModelCatalog
+import io.github.mangi.eta.data.provider.ReasoningCapabilityResolver
+import io.github.mangi.eta.data.model.ProviderSourceTypes
+import io.github.mangi.eta.data.model.ReasoningEffort
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class InitialSetupDefaultsTest {
+    @Test
+    fun deepSeekOnlyOffersOffButPreservesSavedEffort() {
+        val provider = BuiltinProviders.PROVIDERS.single()
+        val flash = OfficialModelCatalog.modelsForProvider(provider).first { it.modelId == "deepseek-flash" }
+        val capabilities = requireNotNull(ReasoningCapabilityResolver.resolve(ProviderSourceTypes.DEEPSEEK, flash))
+        assertEquals(listOf(ReasoningEffort.OFF), capabilities.selectableEfforts)
+        assertEquals(ReasoningEffort.HIGH, capabilities.normalize(ReasoningEffort.HIGH))
+        assertEquals(ReasoningEffort.DEFAULT, capabilities.normalize(ReasoningEffort.DEFAULT))
+    }
+
     @Test
     fun onlyDeepSeekIsPresetAndUsesResponses() {
         val provider = BuiltinProviders.PROVIDERS.single() as OpenAiCompatibleProviderSetting
