@@ -12,6 +12,7 @@ import io.github.mangi.eta.data.model.OpenAiCompatibleProviderSetting
 import io.github.mangi.eta.data.model.ModelSource
 import io.github.mangi.eta.data.model.ProviderSetting
 import io.github.mangi.eta.data.model.ReasoningEffort
+import io.github.mangi.eta.data.model.withModels
 import io.github.mangi.eta.data.provider.BuiltinProviders
 import io.github.mangi.eta.data.provider.OfficialModelCatalog
 import io.github.mangi.eta.ui.model.AgentModelPickerProjector
@@ -42,6 +43,32 @@ class ProviderRepositoryTest {
         runBlocking {
             SettingsDataStore.setSelection(providerId = null, modelId = null)
             SettingsDataStore.setOfficialModelCatalogRevision(0)
+            // 多供应商回归测试显式建立测试数据；产品仅预置 DeepSeek。
+            val fixtures = listOf(
+                OpenAiCompatibleProviderSetting(
+                    id = BuiltinProviders.OPENAI_ID, name = "OpenAI", baseUrl = "https://api.openai.com/v1",
+                    sourceType = io.github.mangi.eta.data.model.ProviderSourceTypes.OPENAI, isBuiltIn = true,
+                ),
+                AnthropicProviderSetting(
+                    id = BuiltinProviders.ANTHROPIC_ID, name = "Anthropic", baseUrl = "https://api.anthropic.com",
+                    sourceType = io.github.mangi.eta.data.model.ProviderSourceTypes.ANTHROPIC, isBuiltIn = true,
+                ),
+                OpenAiCompatibleProviderSetting(
+                    id = BuiltinProviders.KIMI_ID, name = "Kimi", baseUrl = "https://api.moonshot.cn/v1",
+                    sourceType = io.github.mangi.eta.data.model.ProviderSourceTypes.MOONSHOT, isBuiltIn = true,
+                ),
+                OpenAiCompatibleProviderSetting(
+                    id = BuiltinProviders.BAILIAN_ID, name = "百炼", baseUrl = "https://dashscope.aliyuncs.com/compatible-mode/v1",
+                    sourceType = io.github.mangi.eta.data.model.ProviderSourceTypes.BAILIAN, isBuiltIn = true,
+                ),
+                OpenAiCompatibleProviderSetting(
+                    id = BuiltinProviders.STEPFUN_ID, name = "StepFun", baseUrl = "https://api.stepfun.com/v1",
+                    sourceType = io.github.mangi.eta.data.model.ProviderSourceTypes.STEPFUN, isBuiltIn = true,
+                ),
+            )
+            fixtures.forEach { provider ->
+                ProviderRepository.addProvider(provider.withModels(OfficialModelCatalog.modelsForProvider(provider)))
+            }
         }
     }
 
@@ -225,7 +252,7 @@ class ProviderRepositoryTest {
     }
 
     @Test
-    fun catalogUpgradeAppendsOnlyNewIdsWithoutChangingExistingModels() = runBlocking {
+    fun retiredBuiltInCatalogDoesNotChangeExistingModels() = runBlocking {
         ProviderRepository.ensureBuiltInsMerged()
         val provider = ProviderRepository.providerById(BuiltinProviders.OPENAI_ID)!!
         val retained = provider.models.first { it.modelId == "gpt-5.6-sol" }.copy(
@@ -253,8 +280,7 @@ class ProviderRepositoryTest {
         assertEquals(sameIdManual, merged.first { it.id == sameIdManual.id })
         assertTrue(merged.none { it.modelId == "gpt-5.6-terra" })
         assertEquals(1, merged.count { it.modelId.equals("gpt-6-sol", ignoreCase = true) })
-        assertEquals(41, merged.filter { it.id !in setOf(retained.id, selected.id, sameIdManual.id) }
-            .minOf { it.sortOrder })
+        assertEquals(listOf(retained, selected, sameIdManual), merged)
         assertEquals(selected.id, SettingsDataStore.settings().selectedModelId)
         assertEquals(OfficialModelCatalog.CURRENT_REVISION, SettingsDataStore.officialModelCatalogRevision())
 
@@ -323,11 +349,10 @@ class ProviderRepositoryTest {
         ProviderRepository.ensureBuiltInsMerged()
 
         original.forEach { (provider, changed) ->
-            val officialById = OfficialModelCatalog.modelsForProvider(provider).associateBy { it.modelId }
             val restoredById = ProviderRepository.providerById(provider.id)!!.models.associateBy { it.id }
             changed.filter { it.modelId in legacyByProvider.getValue(provider.id) }.forEach { prior ->
                 assertEquals(
-                    prior.copy(reasoningCapabilities = officialById.getValue(prior.modelId).reasoningCapabilities),
+                    prior,
                     restoredById.getValue(prior.id),
                 )
             }

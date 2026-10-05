@@ -13,7 +13,11 @@ internal object McpServerManager {
         val refreshedAt = System.currentTimeMillis()
         server.copy(
             tools = discovery.tools,
-            enabledToolNames = server.enabledToolNames.intersect(availableNames),
+            enabledToolNames = if (server.lastRefreshedAt == null) {
+                availableNames
+            } else {
+                server.enabledToolNames.intersect(availableNames)
+            },
             lastRefreshedAt = refreshedAt,
             lastProtocolVersion = discovery.protocolVersion,
             toolsExpireAt = discovery.cacheTtlMs?.let { ttl ->

@@ -68,6 +68,7 @@ class EtaApp : Application(), XposedServiceHelper.OnServiceListener {
             }
         }
         applicationScope.launch {
+            McpServerRepository.ensurePresets()
             LinuxEnvironmentSettingsRepository.initialize(this@EtaApp)
             runCatching {
                 SkillRuntime.createIndexService(this@EtaApp).listInstalledSkills()

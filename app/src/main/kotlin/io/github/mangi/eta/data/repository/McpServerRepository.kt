@@ -9,8 +9,40 @@ import io.github.mangi.eta.data.model.McpServerSetting
 import java.util.UUID
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 internal object McpServerRepository {
+    private val presetMutex = Mutex()
+
+    val PRESET_SERVERS = listOf(
+        McpServerSetting(
+            id = "builtin-comfyui",
+            name = "comfyui-public",
+            url = "https://comfyui-mcp.tangxi.org/app-mcp",
+            authorizationType = McpAuthorizationType.BASIC,
+        ),
+        McpServerSetting(
+            id = "builtin-danbooru",
+            name = "danbooru-search",
+            url = "https://danbooru-search.tangxi.org/mcp/mcp",
+            authorizationType = McpAuthorizationType.BASIC,
+            sortOrder = 1,
+        ),
+    )
+
+    suspend fun ensurePresets() = presetMutex.withLock {
+        val preferences = context().getSharedPreferences("xiaoyue_setup", Context.MODE_PRIVATE)
+        if (preferences.getBoolean("mcp_presets_seeded", false)) return@withLock
+        val existing = dao().servers().map { it.toDomain() }
+        PRESET_SERVERS.forEach { preset ->
+            if (existing.none { it.id == preset.id || it.url == preset.url }) {
+                dao().insert(preset.toEntity())
+            }
+        }
+        check(preferences.edit().putBoolean("mcp_presets_seeded", true).commit())
+    }
+
     @Volatile
     private lateinit var applicationContext: Context
 

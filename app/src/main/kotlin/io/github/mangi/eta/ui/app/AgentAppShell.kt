@@ -85,6 +85,7 @@ fun AgentAppShell(
     onOpenPermissions: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenModelProviders: () -> Unit,
+    onOpenDrawingSettings: () -> Unit = {},
     modifier: Modifier = Modifier,
     content: @Composable (PaddingValues) -> Unit,
 ) {
@@ -114,6 +115,8 @@ fun AgentAppShell(
                             onStopKimiWeb = onStopKimiWeb,
                             onRefreshKimiWeb = onRefreshKimiWeb,
                             onOpenBrowser = onOpenBrowser,
+                            onOpenModelProviders = onOpenModelProviders,
+                            onOpenDrawingSettings = onOpenDrawingSettings,
                         )
                     }
                 }
@@ -173,6 +176,8 @@ private fun AgentTopBar(
     onStopKimiWeb: () -> Unit,
     onRefreshKimiWeb: () -> Unit,
     onOpenBrowser: () -> Unit,
+    onOpenModelProviders: () -> Unit,
+    onOpenDrawingSettings: () -> Unit,
 ) {
     val isHome = route is AppRoute.Home
     val navigationIcon: @Composable () -> Unit = {
@@ -199,6 +204,8 @@ private fun AgentTopBar(
                 onStopKimiWeb = onStopKimiWeb,
                 onRefreshKimiWeb = onRefreshKimiWeb,
                 onOpenBrowser = onOpenBrowser,
+                onOpenModelProviders = onOpenModelProviders,
+                onOpenDrawingSettings = onOpenDrawingSettings,
             )
         }
     }
@@ -239,6 +246,8 @@ private fun TopBarOverflowMenu(
     onStopKimiWeb: () -> Unit,
     onRefreshKimiWeb: () -> Unit,
     onOpenBrowser: () -> Unit,
+    onOpenModelProviders: () -> Unit,
+    onOpenDrawingSettings: () -> Unit,
 ) {
     var showMenu by remember { mutableStateOf(false) }
     Box {
@@ -308,6 +317,8 @@ private fun TopBarOverflowMenu(
                             )
                         },
                     ),
+                    DropdownItem(text = "模型配置"),
+                    DropdownItem(text = "绘图配置"),
                 ) + if (canStopKimiWeb) listOf(DropdownItem(text = stopKimiWebText)) else emptyList()
             }
             ListPopupColumn {
@@ -324,7 +335,9 @@ private fun TopBarOverflowMenu(
                                 1 -> onOpenTerminal()
                                 2 -> onLaunchKimiWeb()
                                 3 -> onOpenBrowser()
-                                4 -> onStopKimiWeb()
+                                4 -> onOpenModelProviders()
+                                5 -> onOpenDrawingSettings()
+                                6 -> onStopKimiWeb()
                             }
                         },
                     )

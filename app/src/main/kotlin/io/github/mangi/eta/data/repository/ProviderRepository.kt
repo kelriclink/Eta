@@ -201,7 +201,13 @@ internal object ProviderRepository {
 
     private fun seedOfficialModelsIfEmpty(provider: ProviderSetting): ProviderSetting {
         if (provider.models.isNotEmpty()) return provider
-        val seededModels = OfficialModelCatalog.modelsForProvider(provider)
+        val seededModels = OfficialModelCatalog.modelsForProvider(provider).map { model ->
+            if (provider.id == BuiltinProviders.DEEPSEEK_ID) {
+                model.copy(contextWindowOverride = 1_048_576)
+            } else {
+                model
+            }
+        }
         return if (seededModels.isEmpty()) provider else provider.withModels(seededModels)
     }
 
