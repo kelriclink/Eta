@@ -210,7 +210,16 @@ internal object ProviderRepository {
                 }
             }.mapIndexed { index, model ->
             if (provider.id == BuiltinProviders.DEEPSEEK_ID) {
-                model.copy(contextWindowOverride = 1_048_576, sortOrder = index)
+                model.copy(
+                    contextWindowOverride = 1_048_576,
+                    sortOrder = index,
+                    reasoningCapabilitiesOverride = ModelReasoningCapabilities(
+                        defaultEffort = ReasoningEffort.OFF,
+                        defaultEnabled = false,
+                        canDisable = true,
+                        offOnly = true,
+                    ),
+                )
             } else {
                 model
             }

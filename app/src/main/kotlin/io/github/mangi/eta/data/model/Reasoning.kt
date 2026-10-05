@@ -100,8 +100,7 @@ data class ModelReasoningCapabilities(
         }
 
     fun normalize(requested: ReasoningEffort): ReasoningEffort {
-        // 仅限制新选择，不覆盖旧会话已经保存的强度。
-        if (offOnly) return requested
+        if (offOnly) return ReasoningEffort.OFF
         val selectable = selectableEfforts
         if (requested in selectable) return requested
         if (requested == ReasoningEffort.OFF || requested == ReasoningEffort.DEFAULT) {

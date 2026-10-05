@@ -449,6 +449,8 @@ internal fun ProviderModelsTab(
     editingModel?.let { model ->
         ModelEditDialog(
             model = model,
+            offOnly = io.github.mangi.eta.data.provider.ProviderSourceRegistry.resolve(provider) ==
+                io.github.mangi.eta.data.model.ProviderSourceTypes.DEEPSEEK,
             isNew = isCreatingModel,
             isSaving = isMutatingModel,
             error = editorError,
@@ -720,6 +722,7 @@ private fun ModelListItem(
 @Composable
 private fun ModelEditDialog(
     model: Model,
+    offOnly: Boolean,
     isNew: Boolean,
     isSaving: Boolean,
     error: String?,
@@ -766,8 +769,15 @@ private fun ModelEditDialog(
         contextWindowOverride = contextWindowOverrideText.trim()
             .takeIf(String::isNotEmpty)
             ?.toInt(),
-        reasoningOverride = reasoningEnabled.takeIf { reasoningOverrideActive },
-        reasoningCapabilitiesOverride = if (reasoningOverrideActive && reasoningEnabled) {
+        reasoningOverride = if (offOnly) true else reasoningEnabled.takeIf { reasoningOverrideActive },
+        reasoningCapabilitiesOverride = if (offOnly) {
+            ModelReasoningCapabilities(
+                defaultEffort = ReasoningEffort.OFF,
+                defaultEnabled = false,
+                canDisable = true,
+                offOnly = true,
+            )
+        } else if (reasoningOverrideActive && reasoningEnabled) {
             val canDisable = ReasoningEffort.OFF in selectedReasoningEfforts
             (model.effectiveReasoningCapabilities ?: ModelReasoningCapabilities()).copy(
                 supportedEfforts = editableReasoningEfforts.filter { effort ->
@@ -831,6 +841,18 @@ private fun ModelEditDialog(
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Spacer(modifier = Modifier.height(12.dp))
+                if (offOnly) {
+                    EtaPreferenceGroup(modifier = Modifier.fillMaxWidth()) {
+                        EtaCheckboxPreference(
+                            title = ReasoningEffort.OFF.displayName,
+                            summary = "聊天界面按此模型配置读取思考选项",
+                            checked = true,
+                            onCheckedChange = null,
+                            checkboxLocation = CheckboxLocation.End,
+                            enabled = false,
+                        )
+                    }
+                } else {
                 EtaPreferenceGroup(modifier = Modifier.fillMaxWidth()) {
                     EtaSwitchPreference(
                         checked = reasoningEnabled,
@@ -892,6 +914,7 @@ private fun ModelEditDialog(
                     color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                     modifier = Modifier.padding(top = 8.dp),
                 )
+                }
                 error?.let { message ->
                     Text(
                         text = message,
@@ -900,13 +923,13 @@ private fun ModelEditDialog(
                         modifier = Modifier.padding(top = 8.dp),
                     )
                 }
-                if (reasoningOverrideActive || onDelete != null) {
+                if ((!offOnly && reasoningOverrideActive) || onDelete != null) {
                     Row(
                         modifier = Modifier.padding(top = 12.dp),
                         horizontalArrangement = Arrangement.spacedBy(24.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        if (reasoningOverrideActive) {
+                        if (!offOnly && reasoningOverrideActive) {
                             Text(
                                 text = stringResource(R.string.ui_restore_automatic_8d4e1e),
                                 style = MiuixTheme.textStyles.body2,

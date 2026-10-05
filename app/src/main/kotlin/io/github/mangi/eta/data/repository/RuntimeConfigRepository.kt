@@ -126,12 +126,9 @@ internal object RuntimeConfigRepository {
                 ?: AnthropicProviderSetting.DEFAULT_ANTHROPIC_VERSION,
             openAiEndpointMode = endpointMode,
             hostedWebSearchEnabled = provider.hostedWebSearchEnabled,
-            thinkingEnabled = reasoningCapabilities != null && reasoningCapabilities.offOnly != true,
-            reasoningEffort = if (reasoningCapabilities == null || reasoningCapabilities.offOnly) {
-                ReasoningEffort.OFF
-            } else {
-                ReasoningEffort.DEFAULT
-            },
+            thinkingEnabled = reasoningCapabilities?.normalize(ReasoningEffort.DEFAULT)?.enablesReasoning == true,
+            reasoningEffort = reasoningCapabilities?.normalize(ReasoningEffort.DEFAULT)
+                ?: ReasoningEffort.OFF,
             reasoningCapabilities = reasoningCapabilities,
             customHeaders = provider.customHeaders + model.customHeaders,
             customBody = provider.customBody + model.customBody,

@@ -8,19 +8,23 @@ import io.github.mangi.eta.data.provider.OfficialModelCatalog
 import io.github.mangi.eta.data.provider.ReasoningCapabilityResolver
 import io.github.mangi.eta.data.model.ProviderSourceTypes
 import io.github.mangi.eta.data.model.ReasoningEffort
+import io.github.mangi.eta.data.model.ModelReasoningCapabilities
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class InitialSetupDefaultsTest {
     @Test
-    fun deepSeekOnlyOffersOffButPreservesSavedEffort() {
+    fun offOnlyModelConfigurationIsResolvedWithoutProviderSpecialCases() {
         val provider = BuiltinProviders.PROVIDERS.single()
         val flash = OfficialModelCatalog.modelsForProvider(provider).first { it.modelId == "deepseek-flash" }
-        val capabilities = requireNotNull(ReasoningCapabilityResolver.resolve(ProviderSourceTypes.DEEPSEEK, flash))
+        val configured = flash.copy(reasoningCapabilitiesOverride = ModelReasoningCapabilities(
+            defaultEffort = ReasoningEffort.OFF, defaultEnabled = false, canDisable = true, offOnly = true,
+        ))
+        val capabilities = requireNotNull(ReasoningCapabilityResolver.resolve(ProviderSourceTypes.DEEPSEEK, configured))
         assertEquals(listOf(ReasoningEffort.OFF), capabilities.selectableEfforts)
-        assertEquals(ReasoningEffort.HIGH, capabilities.normalize(ReasoningEffort.HIGH))
-        assertEquals(ReasoningEffort.DEFAULT, capabilities.normalize(ReasoningEffort.DEFAULT))
+        assertEquals(ReasoningEffort.OFF, capabilities.normalize(ReasoningEffort.HIGH))
+        assertEquals(ReasoningEffort.OFF, capabilities.normalize(ReasoningEffort.DEFAULT))
     }
 
     @Test

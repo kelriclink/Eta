@@ -216,11 +216,7 @@ internal class AgentAppState(
     }
 
     private fun AgentChatHomeUiState.withCurrentReasoningCapabilities(): AgentChatHomeUiState {
-        val normalized = if (currentReasoningCapabilities?.offOnly == true && selectedConversationId == null) {
-            ReasoningEffort.OFF
-        } else {
-            currentReasoningCapabilities?.normalize(reasoningEffort) ?: ReasoningEffort.OFF
-        }
+        val normalized = currentReasoningCapabilities?.normalize(reasoningEffort) ?: ReasoningEffort.OFF
         return copy(
             thinkingEnabled = normalized.enablesReasoning,
             reasoningEffort = normalized,
@@ -771,7 +767,6 @@ internal class AgentAppState(
     }
 
     fun updateReasoningEffort(effort: ReasoningEffort) {
-        if (currentReasoningCapabilities?.offOnly == true && effort != ReasoningEffort.OFF) return
         val normalized = currentReasoningCapabilities?.normalize(effort) ?: ReasoningEffort.OFF
         updateCurrentConversation(
             homeState.copy(

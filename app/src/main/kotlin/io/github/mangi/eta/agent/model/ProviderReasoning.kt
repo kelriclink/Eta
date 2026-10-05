@@ -323,7 +323,7 @@ internal object ProviderReasoning {
     private fun validatedEffort(config: AgentModelClient.ModelConfig): ReasoningEffort {
         val effort = config.effectiveReasoningEffort
         val capabilities = config.reasoningCapabilities ?: return effort
-        require(capabilities.offOnly || effort in capabilities.selectableEfforts) {
+        require(effort in capabilities.selectableEfforts) {
             "当前模型不支持 ${effort.displayName} thinking effort"
         }
         require(!capabilities.mandatory || effort != ReasoningEffort.OFF) {

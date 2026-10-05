@@ -25,14 +25,6 @@ internal object ReasoningCapabilityResolver {
         model: Model,
         inferExactCatalogModel: Boolean = false,
     ): ModelReasoningCapabilities? {
-        if (sourceType == ProviderSourceTypes.DEEPSEEK) {
-            return ModelReasoningCapabilities(
-                defaultEffort = ReasoningEffort.OFF,
-                defaultEnabled = false,
-                canDisable = true,
-                offOnly = true,
-            )
-        }
         if (model.effectiveReasoning == false) return null
         model.effectiveReasoningCapabilities?.let { return it }
         if (model.effectiveReasoning != true) {
