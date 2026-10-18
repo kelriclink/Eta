@@ -51,6 +51,7 @@ internal class McpRunSnapshot(
         val EMPTY = McpRunSnapshot(emptyList())
 
         suspend fun load(): McpRunSnapshot {
+            McpServerRepository.ensurePresets()
             val projected = mutableListOf<McpRunTool>()
             val now = System.currentTimeMillis()
             McpServerRepository.enabledServers().forEach { configured ->

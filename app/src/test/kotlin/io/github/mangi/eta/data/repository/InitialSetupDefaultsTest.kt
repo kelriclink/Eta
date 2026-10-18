@@ -15,6 +15,25 @@ import org.junit.Test
 
 class InitialSetupDefaultsTest {
     @Test
+    fun endpointMigrationPreservesIdentityAndToolSelection() {
+        val previous = McpServerRepository.PRESET_SERVERS.first().copy(
+            id = "user-server",
+            url = "https://comfyui-mcp.tangxi.org/app-mcp",
+            enabledToolNames = setOf("list_templates"),
+            lastRefreshedAt = 123L,
+            lastProtocolVersion = "2025-11-25",
+            toolsExpireAt = 456L,
+        )
+        assertEquals(previous.copy(
+            url = "https://124.70.165.59:8001/app-mcp",
+            lastProtocolVersion = null,
+            toolsExpireAt = null,
+        ), McpServerRepository.migratePresetEndpoint(previous))
+        val custom = previous.copy(url = "https://example.com/mcp")
+        assertEquals(custom, McpServerRepository.migratePresetEndpoint(custom))
+    }
+
+    @Test
     fun offOnlyModelConfigurationIsResolvedWithoutProviderSpecialCases() {
         val provider = BuiltinProviders.PROVIDERS.single()
         val flash = OfficialModelCatalog.modelsForProvider(provider).first { it.modelId == "deepseek-flash" }
@@ -40,8 +59,8 @@ class InitialSetupDefaultsTest {
     fun drawingPresetsHaveStableAddressesWithoutCachedTools() {
         val presets = McpServerRepository.PRESET_SERVERS
         assertEquals(listOf(
-            "https://comfyui-mcp.tangxi.org/app-mcp",
-            "https://danbooru-search.tangxi.org/mcp/mcp",
+            "https://124.70.165.59:8001/app-mcp",
+            "https://124.70.165.59:8002/mcp/mcp",
         ), presets.map { it.url })
         assertTrue(presets.all { it.authorizationType == McpAuthorizationType.BASIC && it.tools.isEmpty() })
     }

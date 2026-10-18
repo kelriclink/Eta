@@ -27,6 +27,7 @@ internal object McpServerManager {
     }
 
     suspend fun refresh(serverId: String): McpServerSetting {
+        McpServerRepository.ensurePresets()
         val server = requireNotNull(McpServerRepository.serverById(serverId)) {
             "MCP 服务器不存在"
         }

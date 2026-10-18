@@ -1,6 +1,5 @@
 package io.github.mangi.eta.agent.mcp
 
-import io.github.mangi.eta.agent.model.AgentHttpClient
 import io.github.mangi.eta.data.model.McpAuthorizationType
 import io.github.mangi.eta.data.model.McpProtocolMode
 import io.github.mangi.eta.data.model.McpServerSetting
@@ -39,6 +38,7 @@ internal class McpHttpClient(
     )
 
     private val endpoint = validateMcpEndpoint(server.url)
+    private val httpClient = McpTlsClient.forEndpoint(endpoint)
     private val requestIds = AtomicLong(1)
     private val toolHeadersByName = mutableMapOf<String, McpToolHeaders>()
     private val lifecycleLock = Any()
@@ -341,7 +341,7 @@ internal class McpHttpClient(
         expectsBody: Boolean,
         expectedId: Long?,
     ): WireResponse {
-        val call = AgentHttpClient.client.newCall(request)
+        val call = httpClient.newCall(request)
         synchronized(lifecycleLock) {
             check(!closed) { "MCP 客户端已关闭" }
             check(activeCall == null) { "MCP 客户端正在执行其他请求" }
@@ -390,7 +390,7 @@ internal class McpHttpClient(
             .header(HEADER_SESSION_ID, sessionId)
             .applyAuthorization()
             .build()
-        AgentHttpClient.client.newCall(request).enqueue(
+        httpClient.newCall(request).enqueue(
             object : Callback {
                 override fun onFailure(call: Call, e: IOException) = Unit
 

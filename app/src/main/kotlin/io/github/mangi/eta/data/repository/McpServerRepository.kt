@@ -19,13 +19,13 @@ internal object McpServerRepository {
         McpServerSetting(
             id = "builtin-comfyui",
             name = "comfyui-public",
-            url = "https://comfyui-mcp.tangxi.org/app-mcp",
+            url = "https://124.70.165.59:8001/app-mcp",
             authorizationType = McpAuthorizationType.BASIC,
         ),
         McpServerSetting(
             id = "builtin-danbooru",
             name = "danbooru-search",
-            url = "https://danbooru-search.tangxi.org/mcp/mcp",
+            url = "https://124.70.165.59:8002/mcp/mcp",
             authorizationType = McpAuthorizationType.BASIC,
             sortOrder = 1,
         ),
@@ -33,6 +33,11 @@ internal object McpServerRepository {
 
     suspend fun ensurePresets() = presetMutex.withLock {
         val preferences = context().getSharedPreferences("xiaoyue_setup", Context.MODE_PRIVATE)
+        // 使用原 ID 更新，凭据及用户工具开关无需迁移。
+        dao().servers().map { it.toDomain() }.forEach { server ->
+            val migrated = migratePresetEndpoint(server)
+            if (migrated != server) dao().update(migrated.toEntity())
+        }
         if (preferences.getBoolean("mcp_presets_seeded", false)) return@withLock
         val existing = dao().servers().map { it.toDomain() }
         PRESET_SERVERS.forEach { preset ->
@@ -41,6 +46,15 @@ internal object McpServerRepository {
             }
         }
         check(preferences.edit().putBoolean("mcp_presets_seeded", true).commit())
+    }
+
+    internal fun migratePresetEndpoint(server: McpServerSetting): McpServerSetting {
+        val url = when (server.url.trim().trimEnd('/')) {
+            "https://comfyui-mcp.tangxi.org/app-mcp" -> PRESET_SERVERS[0].url
+            "https://danbooru-search.tangxi.org/mcp/mcp" -> PRESET_SERVERS[1].url
+            else -> return server
+        }
+        return server.copy(url = url, lastProtocolVersion = null, toolsExpireAt = null)
     }
 
     @Volatile
