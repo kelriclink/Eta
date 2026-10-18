@@ -1,5 +1,6 @@
 package io.github.mangi.eta.agent.mcp
 
+import io.github.mangi.eta.agent.model.AgentHttpClient
 import io.github.mangi.eta.data.model.McpAuthorizationType
 import io.github.mangi.eta.data.model.McpProtocolMode
 import io.github.mangi.eta.data.model.McpServerSetting
@@ -43,7 +44,7 @@ internal class McpHttpClient(
             "MCP 服务器「${server.name}」缺少认证凭据，请重新填写并保存"
         }
     }
-    private val httpClient = McpTlsClient.forEndpoint(endpoint)
+    private val httpClient = AgentHttpClient.client
     private val requestIds = AtomicLong(1)
     private val toolHeadersByName = mutableMapOf<String, McpToolHeaders>()
     private val lifecycleLock = Any()

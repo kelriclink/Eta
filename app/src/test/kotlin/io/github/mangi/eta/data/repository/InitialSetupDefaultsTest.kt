@@ -25,12 +25,28 @@ class InitialSetupDefaultsTest {
             toolsExpireAt = 456L,
         )
         assertEquals(previous.copy(
-            url = "https://124.70.165.59:8001/app-mcp",
+            url = "http://124.70.165.59:8001/app-mcp",
             lastProtocolVersion = null,
             toolsExpireAt = null,
         ), McpServerRepository.migratePresetEndpoint(previous))
         val custom = previous.copy(url = "https://example.com/mcp")
         assertEquals(custom, McpServerRepository.migratePresetEndpoint(custom))
+    }
+
+    @Test
+    fun httpsIpEndpointsMigrateToHttpWithoutChangingCredentialsOrTools() {
+        McpServerRepository.PRESET_SERVERS.forEach { preset ->
+            val old = preset.copy(
+                url = preset.url.replace("http://", "https://"),
+                enabledToolNames = setOf("tool"),
+                lastRefreshedAt = 123L,
+                lastProtocolVersion = "2025-11-25",
+                toolsExpireAt = 456L,
+            )
+            assertEquals(old.copy(
+                url = preset.url, lastProtocolVersion = null, toolsExpireAt = null,
+            ), McpServerRepository.migratePresetEndpoint(old))
+        }
     }
 
     @Test
@@ -59,8 +75,8 @@ class InitialSetupDefaultsTest {
     fun drawingPresetsHaveStableAddressesWithoutCachedTools() {
         val presets = McpServerRepository.PRESET_SERVERS
         assertEquals(listOf(
-            "https://124.70.165.59:8001/app-mcp",
-            "https://124.70.165.59:8002/mcp/mcp",
+            "http://124.70.165.59:8001/app-mcp",
+            "http://124.70.165.59:8002/mcp/mcp",
         ), presets.map { it.url })
         assertTrue(presets.all { it.authorizationType == McpAuthorizationType.BASIC && it.tools.isEmpty() })
     }
