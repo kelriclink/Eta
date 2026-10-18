@@ -3,7 +3,7 @@
   <string name="permission_local_network_title">Local network access</string>
   <string name="permission_local_network_summary">Allow models, MCP, the built-in browser and terminals to access your local network when needed. Internet access remains available without this permission.</string>
   <string name="permission_local_network_denied">Local network access was not granted. You can allow Nearby devices in the system app permission settings when you need a local service. Internet access remains available.</string>
-  <string name="permission_local_network_settings_unavailable">Could not open settings. Open Eta’s app permissions in system settings to allow Nearby devices.</string>
+  <string name="permission_local_network_settings_unavailable">Could not open settings. Open 小月’s app permissions in system settings to allow Nearby devices.</string>
   <string name="settings_language">Language</string>
   <string name="settings_language_system">Follow system</string>
   <string name="app_name">小月</string>
@@ -62,6 +62,14 @@
   <string name="terminal_reconnect">Reconnect</string>
   <string name="terminal_console_mode">Console mode</string>
   <string name="terminal_block_mode">Simple mode</string>
+  <string name="terminal_key_paste">Paste</string>
+  <string name="terminal_keyboard_show">Show keyboard</string>
+  <string name="terminal_keyboard_hide">Hide keyboard</string>
+  <string name="terminal_key_left">Left</string>
+  <string name="terminal_key_up">Up</string>
+  <string name="terminal_key_down">Down</string>
+  <string name="terminal_key_right">Right</string>
+  <string name="terminal_key_enter">Enter</string>
   <string name="terminal_interrupted">Stopped</string>
   <string name="terminal_env_switched">Switched to %1$s</string>
   <string name="terminal_exit_code">Exit code %1$d</string>
@@ -210,37 +218,20 @@
   <string name="conversation_preview_reasoning">小月 is reasoning</string>
   <string name="conversation_preview_tool_call">Tool call: %1$s</string>
   <string name="conversation_preview_empty">Ask anything. 小月 can operate your device when needed</string>
-  <string name="overlay_received">Request received. Preparing the model</string>
-  <string name="overlay_preparing">Preparing…</string>
-  <plurals name="overlay_preparing_tools">
-    <item quantity="one">Preparing %d tool</item>
-    <item quantity="other">Preparing %d tools</item>
-  </plurals>
-  <string name="overlay_reasoning_round">Reasoning · round %1$d</string>
-  <string name="overlay_requesting_model">Requesting model</string>
-  <string name="overlay_model_responded">Model responded</string>
-  <string name="overlay_generating_tool_arguments">Generating tool arguments</string>
   <string name="overlay_reasoning">Reasoning</string>
-  <string name="overlay_preparing_answer">Preparing answer</string>
-  <string name="overlay_planning_tools">Planning: %1$s</string>
   <string name="overlay_supplement_received">Additional input received. Continuing</string>
-  <string name="overlay_running_tool">Running: %1$s</string>
-  <string name="overlay_tool_completed">Completed: %1$s</string>
   <string name="overlay_hosted_tool_running">Running %1$s</string>
-  <string name="overlay_hosted_tool_completed">%1$s completed</string>
-  <string name="overlay_hosted_tool_failed">%1$s failed</string>
-  <plurals name="overlay_images_read">
-    <item quantity="one">Read %d image</item>
-    <item quantity="other">Read %d images</item>
-  </plurals>
   <string name="overlay_result_ready">Result ready</string>
   <string name="overlay_run_failed">Request failed</string>
   <string name="overlay_generating_answer">Generating answer</string>
   <string name="overlay_substatus_finished">Completed</string>
   <string name="overlay_substatus_failed">Failed</string>
+  <string name="overlay_result_done">Done</string>
+  <string name="overlay_result_open_eta">Open 小月</string>
   <string name="overlay_pause">Pause</string>
   <string name="overlay_resume">Resume</string>
   <string name="overlay_supplement">Add input</string>
+  <string name="overlay_capsule_toggle">%1$s. Tap to show controls</string>
   <string name="overlay_supplement_hint">Add instructions; 小月 continues the current task</string>
   <string name="overlay_send">Send</string>
   <string name="overlay_stopping">Stopping</string>
@@ -273,6 +264,10 @@
   <string name="tool_open_uri">Open with app</string>
   <string name="tool_browser_use">Browse web</string>
   <string name="tool_terminal">Terminal</string>
+  <string name="tool_terminal_job">异步命令</string>
+  <string name="tool_terminal_job_description">启动、查看和停止后台命令；回复结束后继续运行，完成时通知</string>
+  <string name="tool_terminal_daemon">后台服务</string>
+  <string name="tool_terminal_daemon_description">启动、查看和停止可跨 Agent 任务运行的后台服务</string>
   <string name="tool_run_command">Run command</string>
   <string name="tool_read_file">Read file</string>
   <string name="tool_write_file">Write file</string>
@@ -327,7 +322,7 @@
   <string name="ui_context_length_tokens_227860">Context window (tokens)</string>
   <string name="ui_bright_screen_evokes_automatic_voice_input_4358fe">Bright screen evokes automatic voice input</string>
   <string name="ui_only_take_over_with_agent_prefix_d17556">Only take over with /agent prefix</string>
-  <string name="ui_only_check_the_ranges_actually_supported_by_the_mode_2c343d">Only check the ranges actually supported by the model or gateway; unsupported combinations will clearly report an error before requesting.</string>
+  <string name="ui_only_check_the_ranges_actually_supported_by_the_mode_2c343d">Only pick levels the model or gateway supports.</string>
   <string name="ui_preferences_and_strategies_2abd3c">Preferences and Strategies</string>
   <string name="ui_stop_a17f70">stop</string>
   <string name="ui_allow_sensitive_device_operation_3d42ea">Allow sensitive device operation</string>
@@ -403,7 +398,6 @@
   <string name="ui_browse_the_web_da7afb">Browse the web</string>
   <string name="ui_add_custom_model_a5ddc0">Add custom model</string>
   <string name="ui_add_attachment_dba9e8">Add attachment</string>
-  <string name="ui_clear_84fcd7">Clear</string>
   <string name="ui_clear_all_memory_a43bd3">Clear all memory?</string>
   <string name="ui_about_github_star_title">Source Code</string>
   <string name="ui_about_github_star_hint">If 小月 helps you, please star it on GitHub — it means a lot to us</string>
@@ -419,7 +413,6 @@
   <string name="ui_click_to_reinstall_dc60de">Click to reinstall</string>
   <string name="ui_environmental_status_5b32a1">Environment status</string>
   <string name="ui_user_skills_748e7f">Installed by you</string>
-  <string name="ui_determined_by_model_or_provider_06c326">Determined by model or provider</string>
   <string name="ui_long_press_the_power_button_1958d0">Long press the power button</string>
   <string name="ui_leave_blank_to_use_the_default_mobile_agent_prompt_w_21e7c8">Leave blank to use the default mobile Agent system prompt</string>
   <string name="ui_knew_cb63c6">Got it</string>
@@ -593,7 +586,6 @@
   <string name="page_save_failed_40525a">Save failed</string>
   <string name="page_repair_590253">repair</string>
   <string name="page_stop_loading_c62fbc">Stop loading</string>
-  <string name="page_allow_thinking_to_be_turned_off_during_conversations_5a32a9">Allow Reasoning to be disabled in conversations</string>
   <string name="page_select_none_ba20eb">Select none</string>
   <string name="page_select_all_3e44b2">Select all</string>
   <string name="page_delete_3755f5">delete</string>
@@ -619,7 +611,7 @@
   <string name="page_exceeded_the_1_mib_limit_please_delete_120a63">Exceeded the 1 MiB limit, please delete</string>
   <string name="page_the_installation_of_common_tools_has_not_been_comple_d7f7c2">The installation of common tools has not been completed, you can continue from the current progress</string>
   <string name="page_the_current_root_environment_cannot_create_an_isolat_4ca00a">The current Root environment cannot create an isolated mount namespace or chroot</string>
-  <string name="page_current_model_a0af8f">current model</string>
+  <string name="page_current_model_a0af8f">default model</string>
   <string name="page_busy_0212cc">Busy</string>
   <string name="page_retrieving_a880c9">Retrieving...</string>
   <string name="page_support_thinking_5b9e4c">Supports Reasoning</string>
@@ -645,7 +637,7 @@
   <string name="page_continue_installation_62da0c">Continue installation</string>
   <string name="page_edit_model_29e31e">Edit model</string>
   <string name="page_custom_model_25be0f">custom model</string>
-  <string name="page_set_as_current_model_183d7d">Set as current model</string>
+  <string name="page_set_as_current_model_183d7d">Set as default model</string>
   <string name="page_please_complete_the_linux_basic_tool_installation_fi_2ab81b">Please complete the Linux basic tool installation first</string>
   <string name="page_the_remote_end_did_not_return_a_usable_conversation__781487">The remote end did not return a usable conversation model, the existing model has been retained</string>
   <string name="page_select_zip_skills_package_982a44">Select ZIP skills package</string>
@@ -737,7 +729,7 @@
   <string name="tool_ui_coloros_system_memory_eff961">ColorOS system memory</string>
   <string name="tool_ui_qq_chat_pictures_e21bf9">QQ chat pictures</string>
   <string name="tool_ui_wi_fi_password_80e9a4">Wi‑Fi password</string>
-  <string name="tool_ui_user_root_shell_conversational_execution_and_asy_13c2ab">user/root shell, conversational execution and asynchronous reading</string>
+  <string name="tool_ui_user_root_shell_conversational_execution_and_asy_13c2ab">执行命令或复用持久 Shell 会话</string>
   <string name="tool_ui_download_history_8494d7">Download history</string>
   <string name="tool_ui_personal_order_25e4c9">Personal order</string>
   <string name="tool_ui_retrieve_recording_files_from_system_media_libra_314c4d">Retrieve recording files from system media library</string>
@@ -756,7 +748,6 @@
   <string name="tool_ui_list_directory_96e765">list directory</string>
   <string name="tool_ui_clipboard_history_b377bb">Clipboard history</string>
   <string name="tool_ui_only_extract_verification_codes_from_recent_sms__0fb8c1">Only extract verification codes from recent SMS messages</string>
-  <string name="tool_ui_append_or_paste_text_to_the_current_focus_1efdcc">Append or paste text to the current focus</string>
   <string name="tool_ui_start_the_specified_package_name_or_application__beabff">Start the specified package name or application name</string>
   <string name="tool_ui_media_control_585edc">media control</string>
   <string name="tool_ui_storage_ranking_86a16c">Storage ranking</string>
@@ -789,8 +780,6 @@
   <string name="tool_ui_organize_memory_2b08eb">organize memory</string>
   <string name="tool_ui_calendar_events_970349">Calendar events</string>
   <string name="tool_ui_time_and_location_693893">time and location</string>
-  <string name="tool_ui_replacement_text_1a5c8d">replacement text</string>
-  <string name="tool_ui_replace_text_in_focus_or_node_30d332">Replace text in focus or node</string>
   <string name="tool_ui_recently_applied_08f74c">Recently applied</string>
   <string name="tool_ui_bounded_reading_and_filtering_of_recent_logs_0a268a">Bounded reading and filtering of recent logs</string>
   <string name="tool_ui_find_click_and_enter_page_elements_8f102d">Find, click and enter page elements</string>
@@ -812,14 +801,11 @@
   <string name="tool_ui_retrieve_contact_name_and_open_address_6dacc5">Retrieve contact name and open address</string>
   <string name="tool_ui_summarize_steps_sleep_exercise_and_body_metrics_6ff66f">Summarize steps, sleep, exercise and body metrics</string>
   <string name="tool_ui_activity_timer_36f107">Activity timer</string>
-  <string name="tool_ui_clear_text_d4cb57">Clear text</string>
-  <string name="tool_ui_clear_focus_or_node_text_3e754a">Clear focus or node text</string>
   <string name="tool_ui_slide_3723aa">slide</string>
   <string name="tool_ui_scroll_220e68">scroll</string>
   <string name="tool_ui_scroll_the_page_or_specify_a_node_83ab24">Scroll the page or specify a node</string>
   <string name="tool_ui_click_element_7a3d91">click element</string>
   <string name="tool_ui_click_area_cbaa08">click area</string>
-  <string name="tool_ui_reliably_enter_long_text_with_the_clipboard_b6041e">Reliably enter long text with the clipboard</string>
   <string name="tool_ui_open_with_app_32c24e">Open with app</string>
   <string name="tool_ui_directly_create_system_timers_up_to_24_hours_87c476">Directly create system timers up to 24 hours</string>
   <string name="tool_ui_create_a_system_alarm_directly_and_open_the_cloc_9aa214">Create a system alarm directly, and open the clock to confirm if it fails.</string>
@@ -830,7 +816,6 @@
   <string name="tool_ui_open_web_pages_off_screen_and_keep_a_takeover_br_72972e">Open web pages off-screen and keep a takeover browsing session</string>
   <string name="tool_ui_wait_for_the_specified_text_to_appear_on_the_scr_43f9b0">Wait for the specified text to appear on the screen</string>
   <string name="tool_ui_wait_for_text_9e9a54">Wait for text</string>
-  <string name="tool_ui_paste_text_791b85">Paste text</string>
   <string name="tool_ui_system_recording_15eb19">System recording</string>
   <string name="tool_ui_system_log_096733">System log</string>
   <string name="tool_ui_system_panel_b0f7a3">System panel</string>
@@ -863,6 +848,7 @@
   <string name="tool_ui_read_lock_screen_do_not_disturb_audio_output_and_9260b8">Read lock screen, do not disturb, audio output and external screen status</string>
   <string name="tool_ui_read_verification_code_7d1121">Read verification code</string>
   <string name="tool_ui_enter_text_ae47ab">Enter text</string>
+  <string name="tool_ui_type_text_summary">Replace, append or clear text and optionally submit; the result is read back</string>
   <string name="tool_ui_system_buttons_such_as_return_homepage_recent_ta_1b4cf0">System buttons such as return, homepage, recent tasks, etc.</string>
   <string name="tool_ui_notification_history_95d015">Notification history</string>
   <string name="tool_ui_address_book_9070cb">Address book</string>
@@ -953,7 +939,19 @@
     <item quantity="other">Fetched %d models</item>
   </plurals>
   <string name="provider_models_endpoint_summary">Read the /models list from %1$s</string>
-  <string name="provider_models_fetched_filtered">Fetched %1$d models; filtered out %2$d non-chat models</string>
+  <string name="provider_models_up_to_date">Up to date, no new models</string>
+  <string name="provider_context_window_hint">Pick a common size or type one; used to decide when to compact</string>
+  <string name="provider_context_window_invalid">Enter a positive integer</string>
+  <string name="provider_context_window_value">About %1$s tokens</string>
+  <string name="provider_context_window_usage">Conversations compact automatically as they approach this size</string>
+  <plurals name="provider_models_added">
+    <item quantity="one">Added %d model</item>
+    <item quantity="other">Added %d models</item>
+  </plurals>
+  <string name="remote_model_import_title">Add models</string>
+  <string name="remote_model_import_summary">%1$d new models available</string>
+  <string name="remote_model_import_pick_hint">Pick the models to add</string>
+  <string name="remote_model_import_confirm">Add %1$d</string>
   <string name="provider_model_list_count">Models (%1$d)</string>
   <string name="provider_model_list_matches">Models (%1$d of %2$d match)</string>
   <string name="provider_model_saved">Saved: %1$s</string>
@@ -971,7 +969,12 @@
     <item quantity="one">%d selected</item>
     <item quantity="other">%d selected</item>
   </plurals>
-  <string name="provider_auto_reasoning_supported">Auto: supports reasoning</string>
+  <plurals name="provider_delete_models_action">
+    <item quantity="one">Delete %d model</item>
+    <item quantity="other">Delete %d models</item>
+  </plurals>
+  <string name="provider_delete_models_pick_hint">Pick models to delete</string>
+  <string name="provider_auto_reasoning_detected">Detected automatically</string>
   <string name="provider_auto_reasoning_unknown">Auto: unsupported or unknown</string>
   <string name="provider_context_tag">%1$s context</string>
   <string name="provider_sync_failed">Sync failed</string>
@@ -1097,7 +1100,7 @@
     <item quantity="other">%d models</item>
   </plurals>
   <string name="provider_selected">Selected</string>
-  <string name="provider_set_current">Set as current</string>
+  <string name="provider_set_current">Set as default</string>
   <string name="skills_checking_package">Checking skill package</string>
   <string name="skills_import_zip">Import from ZIP</string>
   <string name="skills_installing_package">Verifying and installing. Please wait</string>
@@ -1118,15 +1121,16 @@
   <string name="browser_title">Agent Browser</string>
   <string name="browser_open_external">Open in another app</string>
   <string name="browser_reset_session">Reset session</string>
-  <string name="browser_user_controlling">You are controlling this session. Agent web actions are paused; return to let the Agent continue.</string>
+  <string name="browser_user_controlling">You\'re controlling the page. The Agent is paused until you go back.</string>
   <string name="browser_opening">Opening webpage</string>
   <string name="browser_opening_host">Opening %1$s</string>
   <string name="model_not_selected">Not selected</string>
+  <string name="conversation_model_unavailable">Model unavailable for this conversation. Using %1$s.</string>
   <string name="model_switch_current">Switch model. Current: %1$s</string>
-  <string name="model_collapse_provider">Collapse %1$s</string>
-  <string name="model_expand_provider">Expand %1$s</string>
+  <string name="model_picker_title">Choose model</string>
+  <string name="model_picker_filter_all">All</string>
   <string name="context_no_previous_usage">No usage data yet</string>
-  <string name="context_no_model_limit">Set this model\'s context window in Settings → Model Providers first.</string>
+  <string name="context_no_model_limit">Context window unknown, so automatic compaction is off. You can still compact manually, or set the window in Settings → Model Providers.</string>
   <string name="context_usage_after_response">Measured after the first response</string>
   <string name="context_usage_previous_response">%1$s\nMeasured last turn</string>
   <string name="context_usage_description">Context usage: %1$s</string>
@@ -1337,7 +1341,6 @@
   <string name="speech_saved">Saved</string>
   <string name="speech_saved_with_pending">Saved; some changes are still unsaved</string>
   <string name="speech_save_failed">Save failed: %1$s</string>
-  <string name="speech_loading">Loading settings…</string>
   <string name="speech_load_failed">Could not read speech settings; go back and try again</string>
   <string name="speech_oss_note">Recordings are uploaded as private objects and deleted after transcription. Grant put, read and delete permission for this prefix, and add a one-day expiration lifecycle rule as a cleanup fallback.</string>
   <string name="speech_oss_region">Region</string>
@@ -1347,6 +1350,10 @@
   <string name="speech_dictation_finish">Finish dictation</string>
   <string name="speech_read_aloud">Read aloud</string>
   <string name="speech_read_stop">Stop reading</string>
+  <string name="speech_auto_read_on">Auto read-aloud on, tap to turn off</string>
+  <string name="speech_auto_read_off">Auto read-aloud off, tap to turn on</string>
+  <string name="read_aloud_channel">Read aloud</string>
+  <string name="read_aloud_notification_title">小月 is reading aloud</string>
   <string name="speech_mic_permission">Allow 小月 to use the microphone</string>
   <string name="speech_open_settings">Speech settings</string>
   <string name="speech_test_result">Recognition result: %1$s</string>
@@ -1366,4 +1373,20 @@
   <string name="tool_web_search_description">未使用 Provider 托管搜索时检索公开网页，返回标题、链接与摘要，无需额外 API Key。</string>
   <string name="tool_fetch_url">读取网页正文</string>
   <string name="tool_fetch_url_description">读取静态网页正文并分页续读；不执行网页脚本或共享浏览器登录状态。</string>
+  <string name="chat_edit_character_reply">Edit character reply</string>
+  <string name="chat_previous_candidate">Previous candidate reply</string>
+  <string name="chat_next_candidate">Next candidate reply</string>
+  <string name="chat_image_attachment">Image attachment</string>
+  <string name="chat_edit_preserve_following">Saving updates this message in place and keeps the rest of the conversation</string>
+  <string name="chat_save_message">Save message</string>
+  <string name="chat_character_story_start">The story begins here</string>
+  <string name="tool_details_expand">Expand tool details</string>
+  <string name="tool_details_collapse">Collapse tool details</string>
+  <string name="shared_folders_picker_no_subfolders">No subfolders here</string>
+  <string name="memory_empty_title">No memories yet</string>
+  <string name="memory_mode_preview">Preview</string>
+  <string name="memory_mode_edit">Edit</string>
+  <string name="memory_discard">Discard</string>
+  <string name="chat_character_input_hint">Say something to %1$s…</string>
+  <string name="chat_character_typing">%1$s is replying…</string>
 </resources>

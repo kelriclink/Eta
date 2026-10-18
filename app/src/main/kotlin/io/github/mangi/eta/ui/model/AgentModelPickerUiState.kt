@@ -104,8 +104,20 @@ internal object AgentModelPickerProjector {
         )
 }
 
-internal fun defaultExpandedModelProviderIds(selectedModel: AgentModelOptionUi?): Set<String> =
-    selectedModel?.providerId?.let(::setOf).orEmpty()
+internal val AgentModelPickerUiState.modelCount: Int
+    get() = providerGroups.sumOf { it.models.size }
+
+/** 服务商名称也参与匹配：搜索服务商时列出它的全部模型。 */
+internal fun AgentModelPickerUiState.filterGroups(query: String): List<AgentModelProviderGroupUi> {
+    val search = ModelSearchQuery(query)
+    if (search.isEmpty) return providerGroups
+    return providerGroups.mapNotNull { group ->
+        val models = group.models.filter { model ->
+            search.matches(model.displayName, model.modelId, group.providerName)
+        }
+        models.takeIf(List<*>::isNotEmpty)?.let { group.copy(models = it) }
+    }
+}
 
 internal fun latestContextUsage(
     messages: List<AgentChatMessageUi>,
@@ -135,7 +147,7 @@ internal fun contextUsageProgress(contextTokens: Int?, contextWindow: Int?): Flo
 internal fun formatContextUsage(
     usage: AgentContextUsageUi,
     noUsageText: String = "No usage data yet",
-    noLimitText: String = "Set this model's context window in Settings first",
+    noLimitText: String = "Context window unknown, so automatic compaction is off",
     locale: Locale = Locale.getDefault(),
 ): String = when {
     usage.contextWindow == null || usage.contextWindow <= 0 -> noLimitText

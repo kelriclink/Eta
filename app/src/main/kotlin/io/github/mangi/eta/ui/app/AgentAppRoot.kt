@@ -1,9 +1,5 @@
 package io.github.mangi.eta.ui.app
 
-import io.github.mangi.eta.ui.voice.SpeechOssScreen
-import io.github.mangi.eta.ui.voice.SpeechRecognitionScreen
-import io.github.mangi.eta.ui.voice.SpeechSettingsScreen
-import io.github.mangi.eta.ui.voice.SpeechSynthesisScreen
 import android.Manifest
 import android.app.Activity
 import android.content.Intent
@@ -31,9 +27,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.LayoutDirection
@@ -60,6 +56,7 @@ import io.github.mangi.eta.ui.model.AgentToolsAction
 import io.github.mangi.eta.ui.model.ConversationSummaryUi
 import io.github.mangi.eta.ui.model.LOCAL_NETWORK_PERMISSION_ITEM_ID
 import io.github.mangi.eta.ui.model.PermissionHealthAction
+import io.github.mangi.eta.ui.model.roleplayChatUi
 import io.github.mangi.eta.ui.navigation.AgentNavigator
 import io.github.mangi.eta.ui.navigation.AppRoute
 import io.github.mangi.eta.ui.pages.providers.CommunityCatalogProviderScreen
@@ -69,10 +66,10 @@ import io.github.mangi.eta.ui.pages.providers.ModelProviderListScreen
 import io.github.mangi.eta.ui.screens.backup.DataBackupScreen
 import io.github.mangi.eta.ui.screens.browser.AgentBrowserScreen
 import io.github.mangi.eta.ui.screens.characters.CharacterDetailScreen
-import io.github.mangi.eta.ui.screens.characters.CharacterLibraryScreen
 import io.github.mangi.eta.ui.screens.characters.CharacterEditorScreen
-import io.github.mangi.eta.ui.screens.characters.CharacterPersonaScreen
+import io.github.mangi.eta.ui.screens.characters.CharacterLibraryScreen
 import io.github.mangi.eta.ui.screens.characters.CharacterMemoryScreen
+import io.github.mangi.eta.ui.screens.characters.CharacterPersonaScreen
 import io.github.mangi.eta.ui.screens.enhance.SystemEnhanceScreen
 import io.github.mangi.eta.ui.screens.home.AgentHomeScreen
 import io.github.mangi.eta.ui.screens.mcp.McpServerDetailScreen
@@ -86,17 +83,21 @@ import io.github.mangi.eta.ui.screens.terminal.SharedFoldersScreen
 import io.github.mangi.eta.ui.screens.terminal.TerminalEntryScreen
 import io.github.mangi.eta.ui.screens.terminal.WorkspaceScreen
 import io.github.mangi.eta.ui.screens.tools.AgentToolsScreen
+import io.github.mangi.eta.ui.voice.SpeechOssScreen
+import io.github.mangi.eta.ui.voice.SpeechRecognitionScreen
+import io.github.mangi.eta.ui.voice.SpeechSettingsScreen
+import io.github.mangi.eta.ui.voice.SpeechSynthesisScreen
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.basic.TextField
+import top.yukonga.miuix.kmp.layout.DialogDefaults
 import top.yukonga.miuix.kmp.nav.core.NavDisplay
 import top.yukonga.miuix.kmp.nav.core.NavDisplayEffects
 import top.yukonga.miuix.kmp.nav.core.rememberNavBackStack
 import top.yukonga.miuix.kmp.nav.core.rememberNavSystemCornerRadius
 import top.yukonga.miuix.kmp.nav.transition.NavSwipeDirection
-import top.yukonga.miuix.kmp.layout.DialogDefaults
 import top.yukonga.miuix.kmp.window.WindowDialog
 
 /**
@@ -105,7 +106,13 @@ import top.yukonga.miuix.kmp.window.WindowDialog
 @Composable
 fun AgentAppRoot(
     assistantConversationKey: String? = null,
+    requestedConversationId: String? = null,
+    onRequestedConversationOpened: () -> Unit = {},
+    requestedArchivedConversation: ArchivedConversationRequest? = null,
+    onArchivedConversationOpened: () -> Unit = {},
     openSpeechSettings: Boolean = false,
+    openTerminal: Boolean = false,
+    onTerminalOpened: () -> Unit = {},
     onSpeechSettingsOpened: () -> Unit = {},
     onAssistantConversationOpened: (Boolean) -> Unit = {},
 ) {
@@ -119,18 +126,28 @@ fun AgentAppRoot(
             onSpeechSettingsOpened()
         }
     }
+    LaunchedEffect(openTerminal) {
+        if (openTerminal) {
+            if (backStack.lastOrNull() != AppRoute.Terminal) backStack.add(AppRoute.Terminal)
+            onTerminalOpened()
+        }
+    }
     val navigator = remember(backStack) { AgentNavigator(backStack) }
     var navigationResetKey by rememberSaveable { mutableIntStateOf(0) }
     val appViewModel = viewModel<AgentAppViewModel>()
     val agentState = appViewModel.state
+    val skills = appViewModel.skills
+    val memory = appViewModel.memory
+    val permissionHealth = appViewModel.permissionHealth
+    val toolsState = remember { buildToolsState(context) }
     val characterStore = viewModel<CharacterLibraryViewModel>().store
     val communityCatalogStore = viewModel<CommunityCatalogViewModel>().store
     val requestExecutionNotifications = rememberExecutionNotificationRequest()
-    val requestLocalNetworkPermission = rememberLocalNetworkPermissionRequest(agentState::refreshPermissionHealth)
+    val requestLocalNetworkPermission = rememberLocalNetworkPermissionRequest(permissionHealth::refreshPermissionHealth)
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) {
-        agentState.refreshPermissionHealth()
+        permissionHealth.refreshPermissionHealth()
     }
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
@@ -138,7 +155,7 @@ fun AgentAppRoot(
             if (event == Lifecycle.Event.ON_RESUME) {
                 RootAccess.refresh(context)
                 appViewModel.refreshKimiWeb()
-                agentState.refreshPermissionHealth()
+                permissionHealth.refreshPermissionHealth()
                 agentState.refreshRuntimeResults()
             }
         }
@@ -190,6 +207,23 @@ fun AgentAppRoot(
     }
 
     InitialSetupDialog()
+    LaunchedEffect(requestedConversationId) {
+        val conversationId = requestedConversationId ?: return@LaunchedEffect
+        agentState.selectConversation(conversationId)
+        conversationPaneOpen = false
+        navigator.popToHome()
+        onRequestedConversationOpened()
+    }
+
+    LaunchedEffect(requestedArchivedConversation) {
+        val request = requestedArchivedConversation ?: return@LaunchedEffect
+        // 外部入口的结果要先导入归档才有会话；找不到时停在当前界面，不切到无关的会话。
+        if (agentState.openArchivedConversation(request.source, request.conversationKey)) {
+            conversationPaneOpen = false
+            navigator.popToHome()
+        }
+        onArchivedConversationOpened()
+    }
 
     LaunchedEffect(assistantConversationKey) {
         val conversationKey = assistantConversationKey ?: return@LaunchedEffect
@@ -288,6 +322,10 @@ fun AgentAppRoot(
             onOpenSettings = { pushRoute(AppRoute.Settings) },
             onOpenModelProviders = { pushRoute(AppRoute.ModelProviders) },
             onOpenDrawingSettings = { pushRoute(AppRoute.McpServers) },
+            homeCharacter = if (route is AppRoute.Home) agentState.homeState.roleplayChatUi() else null,
+            onOpenCharacter = {
+                agentState.homeState.roleplay?.let { pushRoute(AppRoute.CharacterDetail(it.characterId)) }
+            },
         ) { padding ->
             Box(
                 modifier = Modifier
@@ -382,7 +420,7 @@ fun AgentAppRoot(
             }
             entry<AppRoute.Tools>(swipeDismiss = swipeDismiss) {
                 AgentToolsScreen(
-                    state = agentState.toolsState,
+                    state = toolsState,
                     onAction = { action ->
                         when (action) {
                             AgentToolsAction.NavigateBack -> popRoute()
@@ -395,20 +433,20 @@ fun AgentAppRoot(
             }
             entry<AppRoute.Skills>(swipeDismiss = swipeDismiss) {
                 LaunchedEffect(Unit) {
-                    agentState.refreshSkills()
+                    skills.refreshSkills()
                 }
                 AgentSkillsScreen(
-                    state = agentState.skillsState,
+                    state = skills.skillsState,
                     onAction = { action ->
                         when (action) {
                             AgentSkillsAction.NavigateBack -> popRoute()
-                            is AgentSkillsAction.ImportZip -> agentState.importSkillZip(action.uri)
-                            AgentSkillsAction.ConfirmZipReplacement -> agentState.confirmSkillZipReplacement()
-                            AgentSkillsAction.CancelZipReplacement -> agentState.cancelSkillZipReplacement()
-                            AgentSkillsAction.DismissNotice -> agentState.dismissSkillNotice()
-                            is AgentSkillsAction.ToggleSkill -> agentState.toggleSkill(action.skillId, action.enabled)
-                            is AgentSkillsAction.DeleteSkill -> agentState.deleteSkill(action.skillId)
-                            is AgentSkillsAction.ReinstallBuiltin -> agentState.reinstallBuiltin(action.skillId)
+                            is AgentSkillsAction.ImportZip -> skills.importSkillZip(action.uri)
+                            AgentSkillsAction.ConfirmZipReplacement -> skills.confirmSkillZipReplacement()
+                            AgentSkillsAction.CancelZipReplacement -> skills.cancelSkillZipReplacement()
+                            AgentSkillsAction.DismissNotice -> skills.dismissSkillNotice()
+                            is AgentSkillsAction.ToggleSkill -> skills.toggleSkill(action.skillId, action.enabled)
+                            is AgentSkillsAction.DeleteSkill -> skills.deleteSkill(action.skillId)
+                            is AgentSkillsAction.ReinstallBuiltin -> skills.reinstallBuiltin(action.skillId)
                         }
                     },
                 )
@@ -457,10 +495,10 @@ fun AgentAppRoot(
             }
             entry<AppRoute.Permissions>(swipeDismiss = swipeDismiss) {
                 LaunchedEffect(Unit) {
-                    agentState.refreshPermissionHealth()
+                    permissionHealth.refreshPermissionHealth()
                 }
                 PermissionHealthScreen(
-                    state = agentState.permissionHealthState,
+                    state = permissionHealth.permissionHealthState,
                     onAction = { action ->
                         when (action) {
                             PermissionHealthAction.NavigateBack -> popRoute()
@@ -539,7 +577,7 @@ fun AgentAppRoot(
                                                 }
                                             }
                                             DeviceLocationProvider.AccessState.AVAILABLE -> {
-                                                agentState.refreshPermissionHealth()
+                                                permissionHealth.refreshPermissionHealth()
                                             }
                                         }
                                     }
@@ -616,18 +654,18 @@ fun AgentAppRoot(
             }
             entry<AppRoute.Memory>(swipeDismiss = swipeDismiss) {
                 LaunchedEffect(Unit) {
-                    agentState.refreshMemory()
+                    memory.refreshMemory()
                 }
                 AgentMemoryScreen(
-                    state = agentState.memoryState,
+                    state = memory.memoryState,
                     onAction = { action ->
                         when (action) {
                             AgentMemoryAction.NavigateBack -> popRoute()
-                            is AgentMemoryAction.ToggleEnabled -> agentState.setMemoryEnabled(action.enabled)
-                            is AgentMemoryAction.DraftChanged -> agentState.updateMemoryDraft(action.content)
-                            AgentMemoryAction.Save -> agentState.saveMemory()
-                            AgentMemoryAction.Clear -> agentState.clearMemory()
-                            AgentMemoryAction.DismissNotice -> agentState.dismissMemoryNotice()
+                            is AgentMemoryAction.ToggleEnabled -> memory.setMemoryEnabled(action.enabled)
+                            is AgentMemoryAction.DraftChanged -> memory.updateMemoryDraft(action.content)
+                            AgentMemoryAction.Save -> memory.saveMemory()
+                            AgentMemoryAction.Clear -> memory.clearMemory()
+                            AgentMemoryAction.DismissNotice -> memory.dismissMemoryNotice()
                         }
                     },
                 )
