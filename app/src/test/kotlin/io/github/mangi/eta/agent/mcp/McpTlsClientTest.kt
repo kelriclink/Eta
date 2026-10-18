@@ -12,9 +12,10 @@ class McpTlsClientTest {
     fun privateTrustIsRestrictedToHttpsAndPresetPorts() {
         assertTrue(McpTlsClient.isPrivateEndpoint("https://124.70.165.59:8001/app-mcp".toHttpUrl()))
         assertTrue(McpTlsClient.isPrivateEndpoint("https://124.70.165.59:8002/mcp/mcp".toHttpUrl()))
+        assertTrue(McpTlsClient.isPrivateEndpoint("https://124.70.165.59:8003/image.png".toHttpUrl()))
         listOf(
             "http://124.70.165.59:8001/app-mcp",
-            "https://124.70.165.59:8003/app-mcp",
+            "https://124.70.165.59:8004/app-mcp",
             "https://example.com:8001/app-mcp",
             "https://api.deepseek.com",
         ).forEach { assertFalse(McpTlsClient.isPrivateEndpoint(it.toHttpUrl())) }

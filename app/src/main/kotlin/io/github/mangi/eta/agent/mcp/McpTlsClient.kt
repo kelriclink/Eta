@@ -13,7 +13,7 @@ import okhttp3.OkHttpClient
 /** 私有 CA 仅用于预置 IP 服务；其他请求仍使用系统信任。 */
 internal object McpTlsClient {
     fun isPrivateEndpoint(url: HttpUrl): Boolean =
-        url.isHttps && url.host == "124.70.165.59" && url.port in setOf(8001, 8002)
+        url.isHttps && url.host == "124.70.165.59" && url.port in setOf(8001, 8002, 8003)
 
     fun forEndpoint(url: HttpUrl): OkHttpClient =
         if (isPrivateEndpoint(url)) privateClient else AgentHttpClient.client

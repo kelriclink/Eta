@@ -1,7 +1,7 @@
 ---
 name: comfyui-img-send
-version: 4.2
-description: ComfyUI 出图发送流程 Skill。生成图片后，先用指定 HTTPS 图片直链直发图片；发不出来则直接贴同一链接，不重试发图片。适用于所有 ComfyUI 文生图、图生图的图片发送场景。
+version: 4.3
+description: ComfyUI 出图发送流程 Skill。生成图片后，先用指定 HTTP 图片直链直发图片；发不出来则直接贴同一链接，不重试发图片。适用于所有 ComfyUI 文生图、图生图的图片发送场景。
 ---
 
 # ComfyUI 出图发送流程 Skill
@@ -28,17 +28,17 @@ description: ComfyUI 出图发送流程 Skill。生成图片后，先用指定 H
 
 | 优先级 | 方式 | 说明 |
 |--------|------|------|
-| 第一优先 | 绘图参数无色情内容 | `https://124.70.165.59:8003/{subfolder}/{filename}` → 用 `send_message_to_user` 的 `image` 类型发送 |
-| 第二优先 | 绘图参数带色情内容或无法成功发送图片 贴链接 | `https://124.70.165.59:8003/{subfolder}/{filename}`，不发图片本体 |
+| 第一优先 | 绘图参数无色情内容 | `http://124.70.165.59:8003/{subfolder}/{filename}` → 用 `send_message_to_user` 的 `image` 类型发送 |
+| 第二优先 | 绘图参数带色情内容或无法成功发送图片 贴链接 | `http://124.70.165.59:8003/{subfolder}/{filename}`，不发图片本体 |
 
-两种方式统一使用 HTTPS 基础地址 `https://124.70.165.59:8003`，不使用旧域名或其他内网地址。
+两种方式统一使用 HTTP 基础地址 `http://124.70.165.59:8003`，不使用旧域名或其他内网地址。
 
 ### 1.2 链接映射规则
 
 ComfyUI 保存的文件名和子文件夹直接映射到网站：
 
 ```
-https://124.70.165.59:8003/prompt_gallery/Anima/828/T2I_000000001.png
+http://124.70.165.59:8003/prompt_gallery/Anima/828/T2I_000000001.png
 ```
 
 ### 1.3 出图保存与命名规则（2026-08-28 起生效）
@@ -49,8 +49,8 @@ Anima 模板出图统一按**每天一个日期目录 + 每天从第 1 张编号
 - 文件名格式：`T2I_000000001.png`、`T2I_000000002.png`…（9 位数字，**每天从 000000001 重新开始**递增）
 - 完整示例：`prompt_gallery/Anima/828/T2I_000000001.png`
 
-拼接公网链接时按 `https://124.70.165.59:8003/{subfolder}/{filename}` 组装，例如：
-`https://124.70.165.59:8003/prompt_gallery/Anima/828/T2I_000000001.png`
+拼接公网链接时按 `http://124.70.165.59:8003/{subfolder}/{filename}` 组装，例如：
+`http://124.70.165.59:8003/prompt_gallery/Anima/828/T2I_000000001.png`
 
 ---
 
@@ -62,12 +62,12 @@ ComfyUI 出图后，从返回结果中提取 `filename` 和 `subfolder`（如 `p
 
 ### 第二步：尝试图片直发
 
-调用 `send_message_to_user` 发送 `image` 类型消息，URL 拼接为 `https://124.70.165.59:8003/{subfolder}/{filename}`。
+调用 `send_message_to_user` 发送 `image` 类型消息，URL 拼接为 `http://124.70.165.59:8003/{subfolder}/{filename}`。
 
 ### 第三步：发送失败 → 贴链接
 
 如果图片直发失败（发送超时/报错），改为发送公网文本链接：
-`https://124.70.165.59:8003/{subfolder}/{filename}`
+`http://124.70.165.59:8003/{subfolder}/{filename}`
 只发链接文本，不发图片本体。
 
 ---
@@ -76,9 +76,9 @@ ComfyUI 出图后，从返回结果中提取 `filename` 和 `subfolder`（如 `p
 
 1. 出图时不附带多余说明文字，只出图。如果Anima模板自带subfolder（如 `prompt_gallery/Anima/828`），按 `{subfolder}/{filename}` 拼接链接
 2. 只有报错时才输出错误信息
-3. 所有链接统一使用 `https://124.70.165.59:8003`，不得拼接旧域名或其他内网直链
+3. 所有链接统一使用 `http://124.70.165.59:8003`，不得拼接旧域名或其他内网直链
 
 ---
 
 *适用场景：ComfyUI 图片发送*
-*版本：v4.2*
+*版本：v4.3*
