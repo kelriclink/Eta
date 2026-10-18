@@ -33,7 +33,7 @@
     {
       "id": "comfyui-img-send",
       "name": "comfyui-img-send",
-      "description": "ComfyUI 出图发送流程 Skill。生成图片后，先用域名图片直链直发图片；发不出来则直接贴同一域名链接，不重试发图片。适用于所有 ComfyUI 文生图、图生图的图片发送场景。",
+      "description": "ComfyUI 出图发送流程 Skill。生成图片后，先用指定 HTTPS 图片直链直发图片；发不出来则直接贴同一链接，不重试发图片。适用于所有 ComfyUI 文生图、图生图的图片发送场景。",
       "assetPath": "builtin_skills/comfyui-img-send",
       "hasScripts": false,
       "hasReferences": false,
