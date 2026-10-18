@@ -17,10 +17,9 @@ internal class McpSecretStore(context: Context) {
         Context.MODE_PRIVATE,
     )
 
-    @Synchronized
-    fun bearerToken(serverId: String): String? {
-        val encoded = preferences.getString(tokenKey(serverId), null) ?: return null
-        return runCatching {
+    fun bearerToken(serverId: String): String? = synchronized(LOCK) {
+        val encoded = preferences.getString(tokenKey(serverId), null) ?: return@synchronized null
+        try {
             val payload = Base64.decode(encoded, Base64.NO_WRAP)
             require(payload.size > GCM_IV_BYTES)
             val cipher = Cipher.getInstance(TRANSFORMATION)
@@ -31,15 +30,17 @@ internal class McpSecretStore(context: Context) {
             )
             cipher.doFinal(payload, GCM_IV_BYTES, payload.size - GCM_IV_BYTES)
                 .toString(Charsets.UTF_8)
-        }.getOrNull()?.takeIf { it.isNotBlank() }
+                .takeIf { it.isNotBlank() }
+        } catch (failure: Exception) {
+            throw IllegalStateException("MCP 凭据无法解密，请重新填写并保存认证信息", failure)
+        }
     }
 
-    @Synchronized
-    fun setBearerToken(serverId: String, token: String) {
+    fun setBearerToken(serverId: String, token: String): Unit = synchronized(LOCK) {
         val normalized = token.trim()
         if (normalized.isBlank()) {
             clear(serverId)
-            return
+            return@synchronized
         }
         val cipher = Cipher.getInstance(TRANSFORMATION)
         cipher.init(Cipher.ENCRYPT_MODE, secretKey())
@@ -50,10 +51,10 @@ internal class McpSecretStore(context: Context) {
             .putString(tokenKey(serverId), Base64.encodeToString(payload, Base64.NO_WRAP))
             .commit()
         ) { "MCP 凭据保存失败" }
+        check(bearerToken(serverId) == normalized) { "MCP 凭据保存后校验失败，请重新保存" }
     }
 
-    @Synchronized
-    fun clear(serverId: String) {
+    fun clear(serverId: String): Unit = synchronized(LOCK) {
         check(preferences.edit().remove(tokenKey(serverId)).commit()) { "MCP 凭据删除失败" }
     }
 
@@ -78,6 +79,7 @@ internal class McpSecretStore(context: Context) {
     private fun tokenKey(serverId: String): String = "bearer_$serverId"
 
     private companion object {
+        val LOCK = Any()
         const val PREFERENCES_NAME = "eta_mcp_secrets"
         const val KEYSTORE_PROVIDER = "AndroidKeyStore"
         const val KEY_ALIAS = "eta_mcp_credentials_v1"

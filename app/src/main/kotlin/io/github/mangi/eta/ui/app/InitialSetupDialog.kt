@@ -81,10 +81,12 @@ internal fun InitialSetupDialog() {
                 confirmEnabled = !working && (deepSeekKey.isNotBlank() || mcpKey.isNotBlank()),
                 onCancel = { if (!working) show = false },
                 onConfirm = {
+                    val savedDeepSeekKey = deepSeekKey
+                    val savedMcpKey = mcpKey
                     working = true
                     scope.launch {
                         try {
-                            val failures = InitialSetupRepository.save(context, deepSeekKey, mcpKey)
+                            val failures = InitialSetupRepository.save(context, savedDeepSeekKey, savedMcpKey)
                             RuntimeConfigRepository.syncToRemotePreferences(EtaApp.serviceInstance)
                             deepSeekKey = ""
                             mcpKey = ""

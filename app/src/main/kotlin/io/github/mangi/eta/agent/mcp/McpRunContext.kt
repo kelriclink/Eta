@@ -55,7 +55,19 @@ internal class McpRunSnapshot(
             val projected = mutableListOf<McpRunTool>()
             val now = System.currentTimeMillis()
             McpServerRepository.enabledServers().forEach { configured ->
-                val bearerToken = McpServerRepository.bearerToken(configured.id)
+                val bearerToken = try {
+                    McpServerRepository.bearerToken(configured.id)
+                } catch (failure: Exception) {
+                    if (failure is kotlinx.coroutines.CancellationException) throw failure
+                    io.github.mangi.eta.core.AndroidAgentLogger.warn(
+                        "MCP credential read failed: serverId=${configured.id} type=${failure.javaClass.simpleName}",
+                    )
+                    return@forEach
+                }
+                if (configured.authorizationType != io.github.mangi.eta.data.model.McpAuthorizationType.NONE && bearerToken.isNullOrBlank()) {
+                    io.github.mangi.eta.core.AndroidAgentLogger.warn("MCP credential missing: serverId=${configured.id}")
+                    return@forEach
+                }
                 val needsRefresh = configured.lastProtocolVersion == null ||
                     configured.lastProtocolVersion == McpProtocolMode.LATEST &&
                     (configured.toolsExpireAt == null || configured.toolsExpireAt <= now)
@@ -64,6 +76,12 @@ internal class McpRunSnapshot(
                         McpServerManager.discover(configured, bearerToken).also {
                             McpServerRepository.update(it)
                         }
+                    }.onFailure { failure ->
+                        if (failure is kotlinx.coroutines.CancellationException) throw failure
+                        val status = (failure as? McpHttpStatusException)?.code
+                        io.github.mangi.eta.core.AndroidAgentLogger.warn(
+                            "MCP discovery failed: serverId=${configured.id} type=${failure.javaClass.simpleName} http=$status",
+                        )
                     }.getOrNull()
                         ?: return@forEach
                 } else {

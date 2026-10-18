@@ -58,12 +58,15 @@ internal object InitialSetupRepository {
             }
             val failures = mutableListOf<String>()
             if (mcpKey.isNotBlank()) {
-                McpServerRepository.PRESET_SERVERS.forEach { preset ->
+                val configuredServers = McpServerRepository.PRESET_SERVERS.map { preset ->
                     val current = McpServerRepository.servers().firstOrNull { it.url == preset.url }
                         ?: McpServerRepository.add(preset, "")
                     val configured = current.copy(authorizationType = McpAuthorizationType.BASIC)
                     // 先保存凭据，连接失败时用户仍可在服务器详情中重试。
                     McpServerRepository.update(configured, bearerToken = mcpKey.trim())
+                    configured
+                }
+                configuredServers.forEach { configured ->
                     try {
                         McpServerManager.refresh(configured.id)
                     } catch (cancelled: CancellationException) {

@@ -95,7 +95,8 @@ internal object McpServerRepository {
     suspend fun update(server: McpServerSetting, bearerToken: String? = null) {
         val previous = requireNotNull(serverById(server.id)) { "MCP 服务器不存在" }
         val secretStore = secrets()
-        val previousToken = secretStore.bearerToken(server.id)
+        // 损坏的旧凭据不能阻止用户保存新的认证信息。
+        val previousToken = runCatching { secretStore.bearerToken(server.id) }.getOrNull()
         val changesSecret = bearerToken != null || server.authorizationType == McpAuthorizationType.NONE
         val updated = if (bearerToken != null) {
             server.copy(lastProtocolVersion = null, toolsExpireAt = null)
@@ -123,7 +124,7 @@ internal object McpServerRepository {
     suspend fun delete(serverId: String) {
         val previous = requireNotNull(serverById(serverId)) { "MCP 服务器不存在" }
         val secretStore = secrets()
-        val previousToken = secretStore.bearerToken(serverId)
+        val previousToken = runCatching { secretStore.bearerToken(serverId) }.getOrNull()
         secretStore.clear(serverId)
         try {
             require(dao().delete(serverId) == 1) { "MCP 服务器不存在" }

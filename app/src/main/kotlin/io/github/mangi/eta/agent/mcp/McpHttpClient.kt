@@ -38,6 +38,11 @@ internal class McpHttpClient(
     )
 
     private val endpoint = validateMcpEndpoint(server.url)
+    init {
+        require(server.authorizationType == McpAuthorizationType.NONE || !bearerToken.isNullOrBlank()) {
+            "MCP 服务器「${server.name}」缺少认证凭据，请重新填写并保存"
+        }
+    }
     private val httpClient = McpTlsClient.forEndpoint(endpoint)
     private val requestIds = AtomicLong(1)
     private val toolHeadersByName = mutableMapOf<String, McpToolHeaders>()

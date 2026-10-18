@@ -265,6 +265,7 @@ internal fun McpServerDetailScreen(
     var showToken by remember { mutableStateOf(false) }
     var tokenAuthIndex by remember { mutableStateOf(0) }
     var token by remember { mutableStateOf("") }
+    var tokenError by remember { mutableStateOf<String?>(null) }
 
     MiuixScaffoldPage(
         title = server?.name ?: stringResource(R.string.route_mcp_server_detail),
@@ -329,6 +330,7 @@ internal fun McpServerDetailScreen(
                     ),
                     onClick = {
                         tokenAuthIndex = authIndexFor(server.authorizationType)
+                        tokenError = null
                         showToken = true
                     },
                 )
@@ -405,7 +407,7 @@ internal fun McpServerDetailScreen(
         show = showToken,
         title = stringResource(R.string.mcp_update_token),
         summary = stringResource(R.string.mcp_update_token_summary),
-        onDismissRequest = { showToken = false },
+        onDismissRequest = { if (!working) showToken = false },
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             EtaWindowSpinnerPreference(
@@ -416,11 +418,13 @@ internal fun McpServerDetailScreen(
                     DropdownItem(text = stringResource(R.string.mcp_auth_basic)),
                 ),
                 selectedIndex = tokenAuthIndex,
+                enabled = !working,
                 onSelectedIndexChange = { tokenAuthIndex = it },
             )
             TextField(
                 value = token,
                 onValueChange = { token = it },
+                enabled = !working,
                 label = stringResource(
                     if (tokenAuthIndex == 2) {
                         R.string.mcp_basic_token
@@ -433,25 +437,43 @@ internal fun McpServerDetailScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 modifier = Modifier.fillMaxWidth(),
             )
+            tokenError?.let { Text(text = it, color = MiuixTheme.colorScheme.error) }
             MiuixDialogActions(
                 confirmText = stringResource(R.string.action_save),
-                onCancel = { showToken = false },
+                confirmEnabled = !working,
+                cancelEnabled = !working,
+                onCancel = { if (!working) showToken = false },
                 onConfirm = {
                     server?.let { current ->
-                        scope.launch(Dispatchers.IO) {
-                            McpServerRepository.update(
-                                current.copy(
-                                    authorizationType = when (tokenAuthIndex) {
-                                        1 -> McpAuthorizationType.BEARER
-                                        2 -> McpAuthorizationType.BASIC
-                                        else -> McpAuthorizationType.NONE
-                                    },
-                                ),
-                                bearerToken = if (tokenAuthIndex == 0) "" else token,
-                            )
+                        val savedType = when (tokenAuthIndex) {
+                            1 -> McpAuthorizationType.BEARER
+                            2 -> McpAuthorizationType.BASIC
+                            else -> McpAuthorizationType.NONE
                         }
-                        token = ""
-                        showToken = false
+                        val savedToken = if (savedType == McpAuthorizationType.NONE) "" else token.trim()
+                        if (savedType != McpAuthorizationType.NONE && savedToken.isBlank()) {
+                            tokenError = "请输入认证凭据，或选择无认证"
+                            return@MiuixDialogActions
+                        }
+                        working = true
+                        tokenError = null
+                        scope.launch {
+                            try {
+                                withContext(Dispatchers.IO) {
+                                    McpServerRepository.update(
+                                        current.copy(authorizationType = savedType), bearerToken = savedToken,
+                                    )
+                                }
+                                token = ""
+                                showToken = false
+                            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                                throw cancelled
+                            } catch (_: Exception) {
+                                tokenError = "认证信息保存失败，请重试；输入内容已保留"
+                            } finally {
+                                working = false
+                            }
+                        }
                     }
                 },
             )
