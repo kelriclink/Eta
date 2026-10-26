@@ -69,6 +69,33 @@ class SkillRuntimeTest {
     }
 
     @Test
+    fun builtinDrawingBodyUpdatesWhilePreservingDataDisabledAndRemovedStates() {
+        val context = RuntimeEnvironment.getApplication()
+        val root = temporaryFolder.newFolder("drawing-skills")
+        val service = SkillIndexService(context, root)
+        service.seedBuiltinSkillsIfNeeded()
+        val skillFile = File(root, "comfyui-img-send/SKILL.md")
+        val dataFile = File(root, "comfyui-img-send/data/notes.txt")
+        dataFile.parentFile!!.mkdirs()
+        dataFile.writeText("keep")
+        skillFile.writeText("old body")
+        service.setSkillEnabled("comfyui-img-send", false)
+
+        val refreshed = service.listSkillsForManagement(forceRefresh = true)
+            .single { it.id == "comfyui-img-send" }
+        val bundled = context.assets.open("builtin_skills/comfyui-img-send/SKILL.md")
+            .bufferedReader().use { it.readText() }
+        assertEquals(bundled, skillFile.readText())
+        assertEquals("keep", dataFile.readText())
+        assertFalse(refreshed.enabled)
+
+        assertTrue(service.deleteSkill("comfyui-img-send"))
+        assertFalse(service.listSkillsForManagement(forceRefresh = true)
+            .single { it.id == "comfyui-img-send" }.installed)
+        assertFalse(skillFile.exists())
+    }
+
+    @Test
     fun builtinSkillInstallerManifestAndFileHaveValidMetadata() {
         val workingDirectory = File(requireNotNull(System.getProperty("user.dir")))
         val assetsRoot = listOf(

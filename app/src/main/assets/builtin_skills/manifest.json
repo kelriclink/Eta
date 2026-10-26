@@ -35,6 +35,7 @@
       "name": "comfyui-img-send",
       "description": "通过 ComfyUI 绘图 MCP 出图并取得图片链接的流程。只教怎么调用 MCP、从返回结果里取链接、把链接发出去。适用于所有需要通过 MCP 生成图片并给出链接的场景。",
       "assetPath": "builtin_skills/comfyui-img-send",
+      "autoUpdateBody": true,
       "hasScripts": false,
       "hasReferences": false,
       "hasAssets": false,

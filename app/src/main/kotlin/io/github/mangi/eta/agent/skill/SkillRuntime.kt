@@ -2,6 +2,7 @@ package io.github.mangi.eta.agent.skill
 
 import android.content.Context
 import android.content.res.AssetManager
+import android.util.AtomicFile
 import io.github.mangi.eta.data.db.EtaDatabase
 import io.github.mangi.eta.data.db.SkillRegistryEntity
 import kotlinx.coroutines.Dispatchers
@@ -33,6 +34,7 @@ private data class BuiltinSkillAsset(
     val name: String = "",
     val description: String = "",
     val assetPath: String = "",
+    val autoUpdateBody: Boolean = false,
     val hasScripts: Boolean = false,
     val hasReferences: Boolean = false,
     val hasAssets: Boolean = false,
@@ -133,6 +135,7 @@ private class BuiltinSkillAssetStore(
                         name = obj.optString("name"),
                         description = obj.optString("description"),
                         assetPath = obj.optString("assetPath"),
+                        autoUpdateBody = obj.optBoolean("autoUpdateBody"),
                         hasScripts = obj.optBoolean("hasScripts"),
                         hasReferences = obj.optBoolean("hasReferences"),
                         hasAssets = obj.optBoolean("hasAssets"),
@@ -158,6 +161,8 @@ private class BuiltinSkillAssetStore(
             val targetDir = File(skillsRoot, builtin.id)
             if (!isSafeBuiltinSkillInstallation(targetDir)) {
                 installBuiltinInternal(builtin)
+            } else if (builtin.autoUpdateBody) {
+                updateBuiltinBody(builtin, targetDir)
             }
             if (entry?.source == BUILTIN_SOURCE && entry.installState == INSTALL_STATE_INSTALLED) {
                 return@forEach
@@ -180,6 +185,22 @@ private class BuiltinSkillAssetStore(
             skillId,
             SkillRegistryEntry(enabled = true, source = BUILTIN_SOURCE, installState = INSTALL_STATE_INSTALLED),
         )
+    }
+
+    /** 仅更新声明自动维护的正文，不重装目录，保留用户数据与注册表状态。 */
+    private fun updateBuiltinBody(builtin: BuiltinSkillAsset, targetDir: File) {
+        val body = context.assets.open("${builtin.assetPath}/SKILL.md").use { it.readBytes() }
+        val skillFile = File(targetDir, "SKILL.md")
+        if (skillFile.readBytes().contentEquals(body)) return
+        val atomic = AtomicFile(skillFile)
+        val output = atomic.startWrite()
+        try {
+            output.write(body)
+            atomic.finishWrite(output)
+        } catch (failure: Throwable) {
+            atomic.failWrite(output)
+            throw failure
+        }
     }
 
     private fun installBuiltinInternal(builtin: BuiltinSkillAsset) {
