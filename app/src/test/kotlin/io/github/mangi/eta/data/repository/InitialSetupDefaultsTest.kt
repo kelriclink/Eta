@@ -25,7 +25,7 @@ class InitialSetupDefaultsTest {
             toolsExpireAt = 456L,
         )
         assertEquals(previous.copy(
-            url = "http://124.70.165.59:8001/app-mcp",
+            url = "https://comfyui-mcp.tangxi.org/mcp",
             lastProtocolVersion = null,
             toolsExpireAt = null,
         ), McpServerRepository.migratePresetEndpoint(previous))
@@ -34,10 +34,18 @@ class InitialSetupDefaultsTest {
     }
 
     @Test
-    fun httpsIpEndpointsMigrateToHttpWithoutChangingCredentialsOrTools() {
-        McpServerRepository.PRESET_SERVERS.forEach { preset ->
+    fun oldIpEndpointsMigrateToDomainsWithoutChangingIdentityOrTools() {
+        val endpoints = listOf(
+            "http://124.70.165.59:8001/app-mcp" to 0,
+            "https://124.70.165.59:8001/app-mcp" to 0,
+            "http://124.70.165.59:8002/mcp/mcp" to 1,
+            "https://124.70.165.59:8002/mcp/mcp" to 1,
+            "https://danbooru-search.tangxi.org/mcp/mcp/" to 1,
+        )
+        endpoints.forEach { (url, index) ->
+            val preset = McpServerRepository.PRESET_SERVERS[index]
             val old = preset.copy(
-                url = preset.url.replace("http://", "https://"),
+                url = url,
                 enabledToolNames = setOf("tool"),
                 lastRefreshedAt = 123L,
                 lastProtocolVersion = "2025-11-25",
@@ -46,6 +54,7 @@ class InitialSetupDefaultsTest {
             assertEquals(old.copy(
                 url = preset.url, lastProtocolVersion = null, toolsExpireAt = null,
             ), McpServerRepository.migratePresetEndpoint(old))
+            assertEquals(preset, McpServerRepository.migratePresetEndpoint(preset))
         }
     }
 
@@ -75,8 +84,8 @@ class InitialSetupDefaultsTest {
     fun drawingPresetsHaveStableAddressesWithoutCachedTools() {
         val presets = McpServerRepository.PRESET_SERVERS
         assertEquals(listOf(
-            "http://124.70.165.59:8001/app-mcp",
-            "http://124.70.165.59:8002/mcp/mcp",
+            "https://comfyui-mcp.tangxi.org/mcp",
+            "https://comfyui-danbooru.tangxi.org/mcp",
         ), presets.map { it.url })
         assertTrue(presets.all { it.authorizationType == McpAuthorizationType.BASIC && it.tools.isEmpty() })
     }

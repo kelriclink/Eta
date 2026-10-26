@@ -19,13 +19,13 @@ internal object McpServerRepository {
         McpServerSetting(
             id = "builtin-comfyui",
             name = "comfyui-public",
-            url = "http://124.70.165.59:8001/app-mcp",
+            url = "https://comfyui-mcp.tangxi.org/mcp",
             authorizationType = McpAuthorizationType.BASIC,
         ),
         McpServerSetting(
             id = "builtin-danbooru",
             name = "danbooru-search",
-            url = "http://124.70.165.59:8002/mcp/mcp",
+            url = "https://comfyui-danbooru.tangxi.org/mcp",
             authorizationType = McpAuthorizationType.BASIC,
             sortOrder = 1,
         ),
@@ -51,8 +51,12 @@ internal object McpServerRepository {
     internal fun migratePresetEndpoint(server: McpServerSetting): McpServerSetting {
         val url = when (server.url.trim().trimEnd('/')) {
             "https://comfyui-mcp.tangxi.org/app-mcp",
+            "http://comfyui-mcp.tangxi.org/app-mcp",
+            "http://124.70.165.59:8001/app-mcp",
             "https://124.70.165.59:8001/app-mcp" -> PRESET_SERVERS[0].url
             "https://danbooru-search.tangxi.org/mcp/mcp",
+            "http://danbooru-search.tangxi.org/mcp/mcp",
+            "http://124.70.165.59:8002/mcp/mcp",
             "https://124.70.165.59:8002/mcp/mcp" -> PRESET_SERVERS[1].url
             else -> return server
         }
